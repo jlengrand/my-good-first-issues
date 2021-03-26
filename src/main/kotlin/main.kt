@@ -1,4 +1,5 @@
 
+import org.kohsuke.github.GHRepository
 import org.kohsuke.github.GitHubBuilder
 import java.io.File
 import java.nio.file.Paths
@@ -14,7 +15,11 @@ fun main(args: Array<String>) {
     }
 
     val github = GitHubBuilder.fromPropertyFile(githubConfigPath.toString()).build()
-    val results = github.myself.listRepositories()
+    val repositories = github.myself.listRepositories()
 
-    println(results.mapNotNull { ghRepository -> ghRepository.language }.joinToString(","))
+    println(repositories.mapNotNull { ghRepository -> ghRepository.language }.joinToString(","))
+
+    // Test issues
+
+    val tag = "good+first+issue"
 }
