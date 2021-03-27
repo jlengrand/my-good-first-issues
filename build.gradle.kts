@@ -14,6 +14,14 @@ repositories {
 }
 
 dependencies {
+    val ktorVersion = "1.5.2"
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-java:$ktorVersion")
+    implementation("io.ktor:ktor-client-apache:$ktorVersion")
+    implementation("io.ktor:ktor-client-logging:$ktorVersion")
+    implementation("io.ktor:ktor-client-jackson:$ktorVersion")
+
+
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.+")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.12.2")
     implementation("org.kohsuke:github-api:1.123")

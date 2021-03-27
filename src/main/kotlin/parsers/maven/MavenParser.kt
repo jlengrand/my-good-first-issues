@@ -4,8 +4,19 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.ktor.client.*
+import io.ktor.client.engine.apache.*
+import io.ktor.client.engine.java.*
+import io.ktor.client.features.*
+import io.ktor.client.features.json.*
+import io.ktor.client.features.logging.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 
 class MavenParser(){
     companion object{
@@ -31,8 +42,31 @@ class MavenParser(){
             // Get Url
             val url = "https://repo1.maven.org/maven2/org/javatuples/javatuples/1.2/javatuples-1.2.pom"
 
+            val client = HttpClient(Apache){
+                install(Logging)
+                install(JsonFeature){
+                    serializer = JacksonSerializer(jackson = kotlinXmlMapper)
+                    accept(ContentType.Text.Xml)
+                }
+            }
 
+            runBlocking{
+                val pomProject: POMProject = callClient(client, url)
+                println(pomProject)
+            }
+
+            client.close()
         }
+    }
+}
+
+suspend fun callClient(client : HttpClient, url : String) : POMProject{
+    return client.get<POMProject>(url){
+    }
+}
+
+suspend fun callClientString(client : HttpClient, url : String) : String{
+    return client.get(url){
     }
 }
 
