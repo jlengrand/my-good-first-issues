@@ -15,11 +15,17 @@ class MavenClient {
         install(JsonFeature){
             serializer = JacksonSerializer(jackson = kotlinXmlMapper)
             accept(ContentType.Text.Xml)
+            accept(ContentType.Application.Xml)
+            accept(ContentType.Text.Plain)
         }
     }
 
     suspend fun getDependencyPom(pomDependency: POMDependency) : POMProject {
         val url = generateUrl(pomDependency)
+        return getPom(url)
+    }
+
+    suspend fun getPom(url : String): POMProject {
         return client.get<POMProject>(url)
     }
 }

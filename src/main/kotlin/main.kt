@@ -1,25 +1,24 @@
-
-import org.kohsuke.github.GHRepository
-import org.kohsuke.github.GitHubBuilder
-import java.io.File
-import java.nio.file.Paths
-import kotlin.system.exitProcess
+import kotlinx.coroutines.runBlocking
+import parsers.maven.IssuesUrlExtractor
+import parsers.maven.MavenClient
+import parsers.maven.UrlSuccess
 
 fun main(args: Array<String>) {
     println("Hello World!")
 
-    val githubConfigPath = Paths.get(Paths.get(System.getProperty("user.dir")).toString(), ".githubconfig")
-    if (!File(githubConfigPath.toString()).exists()) {
-        println("No GitHub config file found, exiting.")
-        exitProcess(0)
+    val rawPomUrl = "https://raw.githubusercontent.com/jlengrand/github-templates/main/lambda/pom.xml"
+
+    val mavenClient = MavenClient()
+    val issuesUrlExtractor = IssuesUrlExtractor()
+
+    runBlocking{
+        val pomProject = mavenClient.getPom(rawPomUrl)
+        println(pomProject.dependencies)
+
+        val urls = pomProject.dependencies.map { mavenClient.getDependencyPom(it) }
+            .map { issuesUrlExtractor.getIssuesUrlFromProject(it) }
+            .filterIsInstance<UrlSuccess>()
+
+        println(urls)
     }
-
-    val github = GitHubBuilder.fromPropertyFile(githubConfigPath.toString()).build()
-    val repositories = github.myself.listRepositories()
-
-    println(repositories.mapNotNull { ghRepository -> ghRepository.language }.joinToString(","))
-
-    // Test issues
-
-    val tag = "good+first+issue"
 }

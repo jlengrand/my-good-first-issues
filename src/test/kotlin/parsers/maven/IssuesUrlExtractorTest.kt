@@ -1,69 +1,68 @@
 package parsers.maven
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 
-internal class IssuesExtractorTest {
+internal class IssuesUrlExtractorTest {
 
-    private val issuesExtractor = IssuesExtractor()
+    private val issuesExtractor = IssuesUrlExtractor()
 
     @Test
     fun shouldThrowExceptionIfScmAndIssueManagementNull(){
-
-        assertThrows<POMException> { issuesExtractor.getIssuesUrlFromProject(POMProject(
+        val pomNoScmNoissue = POMProject(
             groupId = "groupId",
             artifactId = "artifact",
             version = "version",
             scm = null,
             issueManagement = null
-        )) }
+        )
+        assertEquals(UrlFailure(pomNoScmNoissue), issuesExtractor.getIssuesUrlFromProject(pomNoScmNoissue) )
 
-        assertThrows<POMException> { issuesExtractor.getIssuesUrlFromProject(POMProject(
+        val pomNoScm =  POMProject(
             groupId = "groupId",
             artifactId = "artifact",
             version = "version",
             scm = null,
             issueManagement = POMIssuesManagement(null)
-        )) }
+        )
+        assertEquals(UrlFailure(pomNoScm), issuesExtractor.getIssuesUrlFromProject(pomNoScm))
 
-        assertThrows<POMException> { issuesExtractor.getIssuesUrlFromProject(POMProject(
+        val pomNullScm = POMProject(
             groupId = "groupId",
             artifactId = "artifact",
             version = "version",
             scm = POMScm(null),
             issueManagement = null
-        )) }
+        )
+        assertEquals(UrlFailure(pomNullScm), issuesExtractor.getIssuesUrlFromProject(pomNullScm))
 
-        assertThrows<POMException> { issuesExtractor.getIssuesUrlFromProject(POMProject(
+        val pomNullScmNullIssue = POMProject(
             groupId = "groupId",
             artifactId = "artifact",
             version = "version",
             scm = POMScm(null),
             issueManagement = POMIssuesManagement(null)
-        )) }
+        )
+        assertEquals(UrlFailure(pomNullScmNullIssue), issuesExtractor.getIssuesUrlFromProject(pomNullScmNullIssue) )
     }
 
     @Test
     fun shouldThrowExceptionIfRepoUrlIsNotGithub() {
 
-        assertThrows<POMException> {
-            issuesExtractor.getIssuesUrlFromProject(
-                POMProject(
-                    groupId = "groupId",
-                    artifactId = "artifact",
-                    version = "version",
-                    scm = POMScm("scm:svn:http://java-tuples.svn.sourceforge.net/svnroot/java-tuples/tags/javatuples/javatuples-1.2"),
-                    issueManagement = null
-                )
-            )
-        }
+        val pom = POMProject(
+            groupId = "groupId",
+            artifactId = "artifact",
+            version = "version",
+            scm = POMScm("scm:svn:http://java-tuples.svn.sourceforge.net/svnroot/java-tuples/tags/javatuples/javatuples-1.2"),
+            issueManagement = null
+        )
+        assertEquals(UrlFailure(pom), issuesExtractor.getIssuesUrlFromProject(pom))
     }
 
     @Test
     fun returnIssueUrlIfPresent() {
 
-        assertEquals("https://github.com/hub4j/github-api/issues",
+        assertEquals(UrlSuccess("https://github.com/hub4j/github-api/issues"),
             issuesExtractor.getIssuesUrlFromProject(
                 POMProject(
                     groupId = "groupId",
@@ -80,7 +79,7 @@ internal class IssuesExtractorTest {
     fun returnConvertedScmUrlIfPresent() {
 
         assertEquals(
-            "https://github.com/hub4j/github-api/issues",
+            UrlSuccess("https://github.com/hub4j/github-api/issues"),
             issuesExtractor.getIssuesUrlFromProject(
                 POMProject(
                     groupId = "groupId",
@@ -97,7 +96,7 @@ internal class IssuesExtractorTest {
     fun returnIssueUrlIfBothPresent() {
 
         assertEquals(
-            "https://github.com/hub4j/github-api/issues",
+            UrlSuccess("https://github.com/hub4j/github-api/issues"),
             issuesExtractor.getIssuesUrlFromProject(
                 POMProject(
                     groupId = "groupId",
