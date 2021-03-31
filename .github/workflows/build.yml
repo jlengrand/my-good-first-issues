@@ -23,5 +23,6 @@ jobs:
       with:
         arguments: -v
     - uses: eskatos/gradle-command-action@v1
-          with:
-            arguments: build
+      with:
+        arguments: build
+    - uses: codecov/codecov-action@v1
