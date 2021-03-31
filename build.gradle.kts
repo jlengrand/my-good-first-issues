@@ -39,7 +39,7 @@ tasks.jacocoTestReport {
     dependsOn(tasks.test)
     reports {
         html.isEnabled = true
-        xml.isEnabled = false
+        xml.isEnabled = true
         csv.isEnabled = false
     }
 }
