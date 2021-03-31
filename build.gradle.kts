@@ -24,7 +24,6 @@ dependencies {
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.+")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.12.2")
-    implementation("org.kohsuke:github-api:1.123")
     testImplementation(kotlin("test-junit5"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
