@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("nebula.info-scm") version "9.3.0"
     kotlin("jvm") version "1.4.31"
+    jacoco
     application
 }
 
@@ -31,6 +32,16 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        html.isEnabled = true
+        xml.isEnabled = false
+        csv.isEnabled = false
+    }
 }
 
 tasks.withType<KotlinCompile>() {

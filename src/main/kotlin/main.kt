@@ -11,7 +11,7 @@ import java.util.*
 import kotlin.system.exitProcess
 
 
-fun main(args: Array<String>) {
+fun main() {
     val githubConfigPath = Paths.get(Paths.get(System.getProperty("user.dir")).toString(), ".githubconfig")
     if (!File(githubConfigPath.toString()).exists()) {
         println("No GitHub config file found, exiting.")
