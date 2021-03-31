@@ -25,7 +25,7 @@ class MavenClient {
         return getPom(url)
     }
 
-    private suspend fun getPom(url : String): POMProject {
+    suspend fun getPom(url : String): POMProject {
         return client.get<POMProject>(url)
     }
 }

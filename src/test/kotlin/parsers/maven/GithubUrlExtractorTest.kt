@@ -3,9 +3,9 @@ package parsers.maven
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-internal class IssuesUrlExtractorTest {
+internal class GithubUrlExtractorTest {
 
-    private val issuesExtractor = IssuesUrlExtractor()
+    private val issuesExtractor = GithubUrlExtractor()
 
     @Test
     fun shouldThrowExceptionIfScmAndIssueManagementNull(){
@@ -16,7 +16,7 @@ internal class IssuesUrlExtractorTest {
             scm = null,
             issueManagement = null
         )
-        assertEquals(UrlFailure(pomNoScmNoissue), issuesExtractor.getIssuesUrlFromProject(pomNoScmNoissue) )
+        assertEquals(UrlFailure(pomNoScmNoissue), issuesExtractor.getGithubNameFromProject(pomNoScmNoissue) )
 
         val pomNoScm =  POMProject(
             groupId = "groupId",
@@ -25,7 +25,7 @@ internal class IssuesUrlExtractorTest {
             scm = null,
             issueManagement = POMIssuesManagement(null)
         )
-        assertEquals(UrlFailure(pomNoScm), issuesExtractor.getIssuesUrlFromProject(pomNoScm))
+        assertEquals(UrlFailure(pomNoScm), issuesExtractor.getGithubNameFromProject(pomNoScm))
 
         val pomNullScm = POMProject(
             groupId = "groupId",
@@ -34,7 +34,7 @@ internal class IssuesUrlExtractorTest {
             scm = POMScm(null),
             issueManagement = null
         )
-        assertEquals(UrlFailure(pomNullScm), issuesExtractor.getIssuesUrlFromProject(pomNullScm))
+        assertEquals(UrlFailure(pomNullScm), issuesExtractor.getGithubNameFromProject(pomNullScm))
 
         val pomNullScmNullIssue = POMProject(
             groupId = "groupId",
@@ -43,7 +43,7 @@ internal class IssuesUrlExtractorTest {
             scm = POMScm(null),
             issueManagement = POMIssuesManagement(null)
         )
-        assertEquals(UrlFailure(pomNullScmNullIssue), issuesExtractor.getIssuesUrlFromProject(pomNullScmNullIssue) )
+        assertEquals(UrlFailure(pomNullScmNullIssue), issuesExtractor.getGithubNameFromProject(pomNullScmNullIssue) )
     }
 
     @Test
@@ -56,14 +56,14 @@ internal class IssuesUrlExtractorTest {
             scm = POMScm("scm:svn:http://java-tuples.svn.sourceforge.net/svnroot/java-tuples/tags/javatuples/javatuples-1.2"),
             issueManagement = null
         )
-        assertEquals(UrlFailure(pom), issuesExtractor.getIssuesUrlFromProject(pom))
+        assertEquals(UrlFailure(pom), issuesExtractor.getGithubNameFromProject(pom))
     }
 
     @Test
     fun returnIssueUrlIfPresent() {
 
-        assertEquals(UrlSuccess("https://github.com/hub4j/github-api/issues"),
-            issuesExtractor.getIssuesUrlFromProject(
+        assertEquals(UrlSuccess("hub4j/github-api"),
+            issuesExtractor.getGithubNameFromProject(
                 POMProject(
                     groupId = "groupId",
                     artifactId = "artifact",
@@ -79,8 +79,8 @@ internal class IssuesUrlExtractorTest {
     fun returnConvertedScmUrlIfPresent() {
 
         assertEquals(
-            UrlSuccess("https://github.com/hub4j/github-api/issues"),
-            issuesExtractor.getIssuesUrlFromProject(
+            UrlSuccess("hub4j/github-api"),
+            issuesExtractor.getGithubNameFromProject(
                 POMProject(
                     groupId = "groupId",
                     artifactId = "artifact",
@@ -96,8 +96,8 @@ internal class IssuesUrlExtractorTest {
     fun returnIssueUrlIfBothPresent() {
 
         assertEquals(
-            UrlSuccess("https://github.com/hub4j/github-api/issues"),
-            issuesExtractor.getIssuesUrlFromProject(
+            UrlSuccess("hub4j/github-api"),
+            issuesExtractor.getGithubNameFromProject(
                 POMProject(
                     groupId = "groupId",
                     artifactId = "artifact",
