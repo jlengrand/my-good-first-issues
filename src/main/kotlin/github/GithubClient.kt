@@ -6,11 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
+import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.logging.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import kotlinx.coroutines.runBlocking
 import java.util.*
 
 data class GithubUser(
@@ -24,48 +24,66 @@ data class GithubUser(
     var email: String?,
 )
 
+data class GithubIssue(
+    @set:JsonProperty("id")
+    var id: Int,
+
+    @set:JsonProperty("repository_url")
+    var repository_url: String,
+
+    @set:JsonProperty("html_url")
+    var htmlUrl: String,
+
+    @set:JsonProperty("title")
+    var title: String,
+
+    @set:JsonProperty("body")
+    var body: String,
+
+    @set:JsonProperty("created_at")
+    var createdAt: Date,
+
+    @set:JsonProperty("updated_at")
+    var updatedAt : Date
+
+)
+
 class GitHubService(login : String, oauth : String) {
+
+    private val helpLabels = listOf("good first issue", "help wanted", "up for grabs")
+
     private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     private val authToken = "Basic " + Base64.getEncoder().encode("$login:$oauth".toByteArray()).toString(Charsets.UTF_8)
 
+    // TODO : Look into conditional requests https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api#conditional-requests
     private val githubClient = HttpClient(Apache) {
         install(Logging)
         install(JsonFeature) {
             serializer = JacksonSerializer(mapper)
             accept(ContentType.Application.Json)
         }
+
+        defaultRequest {
+            method = HttpMethod.Get
+            host = "api.github.com"
+            header("Accept", "application/vnd.github.v3+json")
+            header("Authorization", authToken) // TODO: Concurrent users
+        }
     }
 
-    fun getUser() {
-        runBlocking {
-            val user = githubClient.get<GithubUser>("https://api.github.com/user"){
-                header("Accept", "application/vnd.github.v3+json")
-                header("Authorization", authToken)
-            }
+    suspend fun getUser() : GithubUser = githubClient.get<GithubUser> {
+        url {
+            encodedPath = "/user"
+        }
+    }
 
-            println(user)
+    suspend fun getGoodIssues(repoName: String) : List<GithubIssue> =
+        githubClient.get<List<GithubIssue>> { url{
+            encodedPath = "/repos/${repoName}/issues"
+            parameter("labels", "help wanted") // TODO : Multiple issues. Multiple requests? Seems like the default aggregator is an AND
+            parameter("state", "open")
+            parameter("assignee", "none")
+            // default result of 100 is enough for now
         }
     }
 }
-
-
-//val authToken = "Basic " + Base64.getEncoder().encode("$username:$password".toByteArray()).toString(Charsets.UTF_8)
-//val httpClient = OkHttpClient.Builder()
-//    .addInterceptor { chain ->
-//        val original = chain.request()
-//        val builder = original.newBuilder()
-//            .header("Accept", "application/vnd.github.v3+json")
-//            .header("Authorization", authToken)
-//        val request = builder.build()
-//        chain.proceed(request)
-//    }
-//    .build()
-//
-//val contentType = "application/json".toMediaType()
-//val retrofit = Retrofit.Builder()
-//    .baseUrl("https://api.github.com")
-//    .addConverterFactory(Json { ignoreUnknownKeys = true }.asConverterFactory(contentType))
-//    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-//    .client(httpClient)
-//    .build()
-//return retrofit.create(GitHubService::class.java)

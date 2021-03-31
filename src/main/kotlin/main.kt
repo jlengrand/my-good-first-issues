@@ -1,4 +1,5 @@
 import github.GitHubService
+import kotlinx.coroutines.runBlocking
 import parsers.maven.IssuesUrlExtractor
 import parsers.maven.MavenClient
 import java.io.File
@@ -40,5 +41,16 @@ fun main(args: Array<String>) {
 
 
     val gitHubService = GitHubService(properties["login"].toString(), properties["oauth"].toString())
-    gitHubService.getUser()
+
+//    runBlocking {
+//        val user = gitHubService.getUser()
+//        println(user)
+//    }
+
+    runBlocking {
+        val issues = gitHubService.getGoodIssues("ktorio/ktor")
+        println(issues.size)
+        println("RTYRTYRTYTRRTRYR")
+        println(issues)
+    }
 }
