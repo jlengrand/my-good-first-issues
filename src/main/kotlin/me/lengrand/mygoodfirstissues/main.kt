@@ -1,15 +1,16 @@
-import github.GitHubService
-import github.GithubLogin
+package me.lengrand.mygoodfirstissues
+
 import kotlinx.coroutines.runBlocking
-import parsers.maven.GithubUrlExtractor
-import parsers.maven.MavenClient
-import parsers.maven.UrlSuccess
+import me.lengrand.GitHubService
+import me.lengrand.GithubLogin
+import me.lengrand.mygoodfirstissues.parsers.maven.GithubUrlExtractor
+import me.lengrand.mygoodfirstissues.parsers.maven.MavenClient
+import me.lengrand.mygoodfirstissues.parsers.maven.UrlSuccess
 import java.io.File
 import java.io.FileReader
 import java.nio.file.Paths
 import java.util.*
 import kotlin.system.exitProcess
-
 
 fun main() {
     val githubConfigPath = Paths.get(Paths.get(System.getProperty("user.dir")).toString(), ".githubconfig")
@@ -46,7 +47,5 @@ fun main() {
     runBlocking {
         val issues = gitHubService.getGoodIssues("ktorio/ktor")
         println(issues.size)
-        println("RTYRTYRTYTRRTRYR")
-        println(issues)
     }
 }

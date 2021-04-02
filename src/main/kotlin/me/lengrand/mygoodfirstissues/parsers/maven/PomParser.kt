@@ -1,4 +1,4 @@
-package parsers.maven
+package me.lengrand.mygoodfirstissues.parsers.maven
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.MapperFeature
@@ -6,6 +6,8 @@ import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import java.io.File
+import java.io.InputStream
 
 class PomParser{
 
@@ -16,10 +18,14 @@ class PomParser{
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)!!
     }
 
-    fun parse(path: String): POMProject {
-        val resource = javaClass.classLoader.getResource(path)
-        return kotlinXmlMapper.readValue<POMProject>(resource)
+    fun parse(stream : InputStream): POMProject {
+        return kotlinXmlMapper.readValue<POMProject>(stream)
     }
+
+    fun parseFromFilePath(path : String) : POMProject {
+        return parse(File(path).inputStream())
+    }
+
 
 //        private inline fun <reified T: Any> parseAs(path: String) : T {
 //            val resource = javaClass.classLoader.getResource(path)

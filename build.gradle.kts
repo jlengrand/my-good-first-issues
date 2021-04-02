@@ -22,7 +22,7 @@ dependencies {
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-jackson:$ktorVersion")
 
-
+    implementation("com.github.ajalt.clikt:clikt:3.1.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.+")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.12.2")
     testImplementation(kotlin("test-junit5"))

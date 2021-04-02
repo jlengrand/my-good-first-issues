@@ -1,4 +1,4 @@
-package github
+package me.lengrand
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature

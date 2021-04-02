@@ -1,4 +1,4 @@
-package parsers.maven
+package me.lengrand.mygoodfirstissues.parsers.maven
 
 sealed class UrlResult
 data class UrlSuccess(val url : String) : UrlResult()

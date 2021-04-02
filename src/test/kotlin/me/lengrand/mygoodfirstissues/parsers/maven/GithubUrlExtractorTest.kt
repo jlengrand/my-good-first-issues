@@ -1,4 +1,4 @@
-package parsers.maven
+package me.lengrand.mygoodfirstissues.parsers.maven
 
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -62,7 +62,8 @@ internal class GithubUrlExtractorTest {
     @Test
     fun returnIssueUrlIfPresent() {
 
-        assertEquals(UrlSuccess("hub4j/github-api"),
+        assertEquals(
+            UrlSuccess("hub4j/github-api"),
             issuesExtractor.getGithubNameFromProject(
                 POMProject(
                     groupId = "groupId",

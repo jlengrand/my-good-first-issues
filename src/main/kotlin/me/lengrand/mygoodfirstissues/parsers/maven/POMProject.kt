@@ -1,4 +1,4 @@
-package parsers.maven
+package me.lengrand.mygoodfirstissues.parsers.maven
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonProperty
