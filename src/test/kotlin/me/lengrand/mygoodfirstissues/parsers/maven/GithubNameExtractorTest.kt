@@ -3,9 +3,9 @@ package me.lengrand.mygoodfirstissues.parsers.maven
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-internal class GithubUrlExtractorTest {
+internal class GithubNameExtractorTest {
 
-    private val issuesExtractor = GithubUrlExtractor()
+    private val issuesExtractor = GithubNameExtractor()
 
     @Test
     fun shouldThrowExceptionIfScmAndIssueManagementNull(){
@@ -16,7 +16,7 @@ internal class GithubUrlExtractorTest {
             scm = null,
             issueManagement = null
         )
-        assertEquals(UrlFailure(pomNoScmNoissue), issuesExtractor.getGithubNameFromProject(pomNoScmNoissue) )
+        assertEquals(GithubNameFailure(pomNoScmNoissue), issuesExtractor.getGithubNameFromProject(pomNoScmNoissue) )
 
         val pomNoScm =  POMProject(
             groupId = "groupId",
@@ -25,7 +25,7 @@ internal class GithubUrlExtractorTest {
             scm = null,
             issueManagement = POMIssuesManagement(null)
         )
-        assertEquals(UrlFailure(pomNoScm), issuesExtractor.getGithubNameFromProject(pomNoScm))
+        assertEquals(GithubNameFailure(pomNoScm), issuesExtractor.getGithubNameFromProject(pomNoScm))
 
         val pomNullScm = POMProject(
             groupId = "groupId",
@@ -34,7 +34,7 @@ internal class GithubUrlExtractorTest {
             scm = POMScm(null),
             issueManagement = null
         )
-        assertEquals(UrlFailure(pomNullScm), issuesExtractor.getGithubNameFromProject(pomNullScm))
+        assertEquals(GithubNameFailure(pomNullScm), issuesExtractor.getGithubNameFromProject(pomNullScm))
 
         val pomNullScmNullIssue = POMProject(
             groupId = "groupId",
@@ -43,7 +43,7 @@ internal class GithubUrlExtractorTest {
             scm = POMScm(null),
             issueManagement = POMIssuesManagement(null)
         )
-        assertEquals(UrlFailure(pomNullScmNullIssue), issuesExtractor.getGithubNameFromProject(pomNullScmNullIssue) )
+        assertEquals(GithubNameFailure(pomNullScmNullIssue), issuesExtractor.getGithubNameFromProject(pomNullScmNullIssue) )
     }
 
     @Test
@@ -56,14 +56,14 @@ internal class GithubUrlExtractorTest {
             scm = POMScm("scm:svn:http://java-tuples.svn.sourceforge.net/svnroot/java-tuples/tags/javatuples/javatuples-1.2"),
             issueManagement = null
         )
-        assertEquals(UrlFailure(pom), issuesExtractor.getGithubNameFromProject(pom))
+        assertEquals(GithubNameFailure(pom), issuesExtractor.getGithubNameFromProject(pom))
     }
 
     @Test
     fun returnIssueUrlIfPresent() {
 
         assertEquals(
-            UrlSuccess("hub4j/github-api"),
+            GithubNameSuccess("hub4j/github-api"),
             issuesExtractor.getGithubNameFromProject(
                 POMProject(
                     groupId = "groupId",
@@ -80,7 +80,7 @@ internal class GithubUrlExtractorTest {
     fun returnConvertedScmUrlIfPresent() {
 
         assertEquals(
-            UrlSuccess("hub4j/github-api"),
+            GithubNameSuccess("hub4j/github-api"),
             issuesExtractor.getGithubNameFromProject(
                 POMProject(
                     groupId = "groupId",
@@ -97,7 +97,7 @@ internal class GithubUrlExtractorTest {
     fun returnIssueUrlIfBothPresent() {
 
         assertEquals(
-            UrlSuccess("hub4j/github-api"),
+            GithubNameSuccess("hub4j/github-api"),
             issuesExtractor.getGithubNameFromProject(
                 POMProject(
                     groupId = "groupId",

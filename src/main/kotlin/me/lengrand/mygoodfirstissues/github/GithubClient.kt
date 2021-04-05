@@ -1,4 +1,4 @@
-package me.lengrand
+package me.lengrand.mygoodfirstissues.github
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -8,10 +8,18 @@ import io.ktor.client.*
 import io.ktor.client.engine.apache.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
-import io.ktor.client.features.logging.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import me.lengrand.mygoodfirstissues.parsers.maven.MavenClientException
+import me.lengrand.mygoodfirstissues.parsers.maven.MavenClientFailure
+import me.lengrand.mygoodfirstissues.parsers.maven.POMProject
 import java.util.*
+
+sealed class GitHubServiceResult
+data class GitHubServiceFailure(val throwable : Throwable) : GitHubServiceResult()
+data class GitHubServiceSuccess(val githubIssues: List<GithubIssue>) : GitHubServiceResult()
+
+class GitHubServiceException( message : String) : Throwable(message)
 
 class GitHubService(githubLogin: GithubLogin) {
 
@@ -21,7 +29,7 @@ class GitHubService(githubLogin: GithubLogin) {
 
     // TODO : Look into conditional requests https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api#conditional-requests
     private val githubClient = HttpClient(Apache) {
-        install(Logging)
+//        install(Logging)
         install(JsonFeature) {
             serializer = JacksonSerializer(mapper)
             accept(ContentType.Application.Json)
@@ -33,6 +41,13 @@ class GitHubService(githubLogin: GithubLogin) {
             header("Accept", "application/vnd.github.v3+json")
             if (githubLogin.hasToken()) header("Authorization", githubLogin.authToken)
         }
+        HttpResponseValidator {
+            validateResponse { response ->
+                if (response.status.value > 200) {
+                    GitHubServiceFailure(GitHubServiceException(response.toString()))
+                }
+            }
+        }
     }
 
     suspend fun getUser() : GithubUser = githubClient.get<GithubUser> {
@@ -41,14 +56,20 @@ class GitHubService(githubLogin: GithubLogin) {
         }
     }
 
-    suspend fun getGoodIssues(repoName: String) : List<GithubIssue> =
-        githubClient.get<List<GithubIssue>> { url{
-            encodedPath = "/repos/${repoName}/issues"
-            parameter("labels", "help wanted") // TODO : Multiple issues. Multiple requests? Seems like the default aggregator is an AND
-            parameter("state", "open")
-            parameter("assignee", "none")
-            // default result of 100 is enough for now
-        }
+    suspend fun getGoodIssues(repoName: String) : GitHubServiceResult {
+
+        return GitHubServiceSuccess(githubClient.get<List<GithubIssue>> {
+            url {
+                encodedPath = "/repos/${repoName}/issues"
+                parameter(
+                    "labels",
+                    "help wanted"
+                ) // TODO : Multiple issues. Multiple requests? The default aggregator is an AND
+                parameter("state", "open")
+                parameter("assignee", "none")
+                // default result of 100 is enough for now
+            }
+        })
     }
 }
 

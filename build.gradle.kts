@@ -5,6 +5,7 @@ plugins {
     kotlin("jvm") version "1.4.31"
     jacoco
     application
+//    kotlin("kapt") version "1.4.32"
 }
 
 group = "me.jlengrand"
@@ -22,13 +23,21 @@ dependencies {
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-jackson:$ktorVersion")
 
-    implementation("com.github.ajalt.clikt:clikt:3.1.0")
+    implementation("info.picocli:picocli:4.6.1")
+//    kapt("info.picocli:picocli-codegen:4.6.1")
+
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.+")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.12.2")
     testImplementation(kotlin("test-junit5"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
 }
+
+//kapt {
+//    arguments {
+//        arg("project", "${project.group}/${project.name}")
+//    }
+//}
 
 tasks.test {
     useJUnitPlatform()
@@ -49,5 +58,21 @@ tasks.withType<KotlinCompile>() {
 }
 
 application {
-    mainClassName = "MainKt"
+    mainClassName = "me.lengrand.mygoodfirstissues.CliFirstGoodIssues"
+}
+
+tasks {
+    register("fatJar", Jar::class.java) {
+        archiveClassifier.set("all")
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        manifest {
+            attributes["Main-Class"] = "me.lengrand.mygoodfirstissues.CliFirstGoodIssues"
+        }
+        from(configurations.runtimeClasspath.get()
+            .onEach { println("add from dependencies: ${it.name}") }
+            .map { if (it.isDirectory) it else zipTree(it) })
+        val sourcesMain = sourceSets.main.get()
+        sourcesMain.allSource.forEach { println("add from sources: ${it.name}") }
+        from(sourcesMain.output)
+    }
 }

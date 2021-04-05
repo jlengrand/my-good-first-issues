@@ -1,17 +1,44 @@
 package me.lengrand.mygoodfirstissues
 
-import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.parameters.arguments.argument
-import com.github.ajalt.clikt.parameters.arguments.default
+import kotlinx.coroutines.runBlocking
+import me.lengrand.mygoodfirstissues.github.GithubIssue
+import picocli.CommandLine
+import java.util.concurrent.Callable
+import kotlin.system.exitProcess
 
-class CliFirstGoodIssues : CliktCommand() {
-    val pomLocation : String by argument(help="location of the pom scan to scan").default("./pom.xml")
+class CliFirstGoodIssues : Callable<Int> {
 
-    override fun run() {
-        TODO("Not yet implemented")
-        echo("Let's find some Open-Source for you to work on!")
+    @CommandLine.Parameters(index = "0", description = ["location of the pom scan to scan"], defaultValue = "./pom.xml")
+    private var pomLocation : String? = null
+
+    override fun call() : Int {
+        println(CommandLine.Help.Ansi.AUTO.string("@|bold Let's find some Open-Source for you to work on|@"))
+        val myGoodFirstIssuesService = MyGoodFirstIssuesService()
+
+        return runBlocking {
+            val result = myGoodFirstIssuesService.getGithubIssues(pomLocation!!)
+            when(result){
+                is GithubIssuesFailure ->
+                    println(result.throwable.message)
+                is GithubIssuesSuccess ->
+                    result.githubIssues.forEach{ prettyPrintIssue(it) }
+            }
+
+            return@runBlocking 0
+        }
+
     }
 
-}
+    private fun prettyPrintIssue(githubIssue: GithubIssue) {
+        println(
+            CommandLine.Help.Ansi.AUTO.string("@|bold,yellow  ${githubIssue.title}|@")
+        )
+    }
 
-fun main(args: Array<String>) = CliFirstGoodIssues().main(args)
+    companion object{
+        @JvmStatic
+        fun main(args : Array<String>){
+            exitProcess(CommandLine(CliFirstGoodIssues()).execute(*args))
+        }
+    }
+}

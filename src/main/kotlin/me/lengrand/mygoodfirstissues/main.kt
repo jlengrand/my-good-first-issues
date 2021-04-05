@@ -1,10 +1,7 @@
 package me.lengrand.mygoodfirstissues
 
 import kotlinx.coroutines.runBlocking
-import me.lengrand.GitHubService
-import me.lengrand.GithubLogin
-import me.lengrand.mygoodfirstissues.parsers.maven.UrlSuccess
-import java.util.*
+import java.io.File
 
 fun main() {
     // TODO : Implement that stuff
@@ -18,11 +15,14 @@ fun main() {
     //    properties.load(reader)
     //    val gitHubService = GitHubService(properties["login"].toString(), properties["oauth"].toString())
 
+    val filepath = "./pom.xml"
+    println(File(filepath).exists())
+
     val rawPomUrl = "https://raw.githubusercontent.com/jlengrand/github-templates/main/lambda/pom.xml"
     val myGoodFirstIssuesService = MyGoodFirstIssuesService()
 
     runBlocking {
         val issues = myGoodFirstIssuesService.getGithubIssues(rawPomUrl)
-        println(issues.size)
+        println(issues)
     }
 }
