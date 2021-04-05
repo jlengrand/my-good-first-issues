@@ -47,13 +47,3 @@ data class POMProject(
     @set:JsonAlias("issueManagement")
     var issueManagement: POMIssuesManagement?
 )
-
-fun projectToDependency(pomProject: POMProject) : POMDependency =
-    if (pomProject.version == null || pomProject.groupId == null) throw POMException("Null value found for ${pomProject.groupId}:${pomProject.artifactId}:${pomProject.version}") else POMDependency(
-        groupId = pomProject.groupId!!,
-        artifactId = pomProject.artifactId,
-        version = pomProject.version!!
-    )
-
-class POMException(message:String): Exception(message)
-

@@ -12,7 +12,7 @@ data class GithubIssuesSuccess(val githubIssues: List<GithubIssue>) : MyGoodFirs
 
 class MyGoodFirstIssuesService {
 
-    private val mavenClient = MavenClient()
+    private val mavenClient = MavenClient(MavenClient.getDefaultClient())
     private val githubUrlExtractor = GithubNameExtractor()
     private val gitHubService = GitHubService(GithubLogin())
 

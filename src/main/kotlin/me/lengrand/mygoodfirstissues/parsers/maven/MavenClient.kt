@@ -14,30 +14,14 @@ sealed class MavenClientResult
 data class MavenClientFailure(val throwable : Throwable) : MavenClientResult()
 data class MavenClientSuccess(val pomProject: POMProject) : MavenClientResult()
 
-class MavenClientException( message : String) : Throwable(message)
+class MavenClientException(message : String) : Throwable(message)
 
-class MavenClient {
-
-    private val client = HttpClient(Apache) {
-//        install(Logging)
-        install(JsonFeature) {
-            serializer = JacksonSerializer(jackson = kotlinXmlMapper)
-            accept(ContentType.Text.Xml)
-            accept(ContentType.Application.Xml)
-            accept(ContentType.Text.Plain)
-        }
-        HttpResponseValidator {
-            validateResponse { response ->
-                if (response.status.value > 200) {
-                    MavenClientFailure(MavenClientException(response.toString()))
-                }
-            }
-        }
-    }
+class MavenClient(private val client : HttpClient) {
 
     suspend fun getDependencyPom(pomDependency: POMDependency) = getPom(generateUrl(pomDependency))
 
-    private suspend fun getRemotePom(url : String) = MavenClientSuccess(client.get<POMProject>(url))
+    private suspend fun getRemotePom(url : String) =
+        try{ MavenClientSuccess(client.get<POMProject>(url)) }catch (e: Exception) { MavenClientFailure(e) }
 
     private fun getLocalPom(filePath : String) =
         if(File(filePath).exists()) (MavenClientSuccess(PomParser().parseFromFilePath(filePath)))
@@ -46,9 +30,22 @@ class MavenClient {
     suspend fun getPom(urlOrFilePath: String) : MavenClientResult =
         if(isRemotePom(urlOrFilePath)) getRemotePom(urlOrFilePath) else getLocalPom(urlOrFilePath)
 
-
     private fun isRemotePom(urlOrFilePath : String) =
         urlOrFilePath.startsWith("http://") || urlOrFilePath.startsWith("https://")
+
+    companion object {
+        fun getDefaultClient(): HttpClient {
+            return HttpClient(Apache) {
+    //        install(Logging)
+                install(JsonFeature) {
+                    serializer = JacksonSerializer(jackson = kotlinXmlMapper)
+                    accept(ContentType.Text.Xml)
+                    accept(ContentType.Application.Xml)
+                    accept(ContentType.Text.Plain)
+                }
+            }
+        }
+    }
 }
 
 const val ROOT_MAVEN_URL = "https://repo1.maven.org/maven2/";

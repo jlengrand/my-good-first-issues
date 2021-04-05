@@ -22,6 +22,7 @@ dependencies {
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-jackson:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
 
     implementation("info.picocli:picocli:4.6.1")
 //    kapt("info.picocli:picocli-codegen:4.6.1")
