@@ -17,7 +17,6 @@ internal class MavenClientTest {
     private val minimalResourcePom = javaClass.classLoader.getResource("poms/minimal-pom.xml")
 
     private val mockClient = HttpClient(MockEngine) {
-//        expectSuccess = false
         engine {
             addHandler { request ->
                 when (request.url.fullUrl) {

@@ -15,14 +15,6 @@ internal class PomParserTest {
     private val gsonPom = javaClass.classLoader.getResourceAsStream("poms/gson-pom.xml")
     private val gsonParentPom = javaClass.classLoader.getResourceAsStream("poms/gson-parent-pom.xml")
 
-    @BeforeEach
-    fun setUp() {
-    }
-
-    @AfterEach
-    fun tearDown() {
-    }
-
     @Test
     fun shouldParsePomInfo(){
         val pomProject = pomParser.parse(examplePom)

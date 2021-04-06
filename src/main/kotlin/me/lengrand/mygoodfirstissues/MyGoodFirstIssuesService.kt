@@ -14,7 +14,7 @@ class MyGoodFirstIssuesService {
 
     private val mavenClient = MavenClient(MavenClient.getDefaultClient())
     private val githubUrlExtractor = GithubNameExtractor()
-    private val gitHubService = GitHubService(GithubLogin())
+    private val gitHubService = GitHubService(GitHubService.getDefaultClient(GithubLogin()))
 
     suspend fun getGithubIssues(urlOrPath: String): MyGoodFirstIssuesServiceResult {
         val pomResult = mavenClient.getPom(urlOrPath)

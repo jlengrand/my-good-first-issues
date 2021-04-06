@@ -2,7 +2,6 @@ package me.lengrand.mygoodfirstissues.parsers.maven
 
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
-import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -13,8 +12,6 @@ import java.io.FileNotFoundException
 sealed class MavenClientResult
 data class MavenClientFailure(val throwable : Throwable) : MavenClientResult()
 data class MavenClientSuccess(val pomProject: POMProject) : MavenClientResult()
-
-class MavenClientException(message : String) : Throwable(message)
 
 class MavenClient(private val client : HttpClient) {
 

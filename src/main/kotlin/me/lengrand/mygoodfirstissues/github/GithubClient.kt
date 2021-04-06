@@ -10,79 +10,50 @@ import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import me.lengrand.mygoodfirstissues.parsers.maven.MavenClientException
-import me.lengrand.mygoodfirstissues.parsers.maven.MavenClientFailure
-import me.lengrand.mygoodfirstissues.parsers.maven.POMProject
 import java.util.*
 
 sealed class GitHubServiceResult
 data class GitHubServiceFailure(val throwable : Throwable) : GitHubServiceResult()
 data class GitHubServiceSuccess(val githubIssues: List<GithubIssue>) : GitHubServiceResult()
 
-class GitHubServiceException( message : String) : Throwable(message)
-
-class GitHubService(githubLogin: GithubLogin) {
+class GitHubService(private val githubClient : HttpClient) {
 
     private val helpLabels = listOf("good first issue", "help wanted", "up for grabs") // TODO : Use later
 
-    private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    companion object{
+        // TODO : Look into conditional requests https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api#conditional-requests
+        fun getDefaultClient(githubLogin: GithubLogin) = HttpClient(Apache) {
+            install(JsonFeature) {
+                serializer = JacksonSerializer(ObjectMapper().registerKotlinModule().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false))
+                accept(ContentType.Application.Json)
+            }
 
-    // TODO : Look into conditional requests https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api#conditional-requests
-    private val githubClient = HttpClient(Apache) {
-//        install(Logging)
-        install(JsonFeature) {
-            serializer = JacksonSerializer(mapper)
-            accept(ContentType.Application.Json)
+            defaultRequest {
+                method = HttpMethod.Get
+                host = "api.github.com"
+                header("Accept", "application/vnd.github.v3+json")
+                if (githubLogin.hasToken()) header("Authorization", githubLogin.authToken)
+            }
         }
+    }
 
-        defaultRequest {
-            method = HttpMethod.Get
-            host = "api.github.com"
-            header("Accept", "application/vnd.github.v3+json")
-            if (githubLogin.hasToken()) header("Authorization", githubLogin.authToken)
-        }
-        HttpResponseValidator {
-            validateResponse { response ->
-                if (response.status.value > 200) {
-                    GitHubServiceFailure(GitHubServiceException(response.toString()))
+    suspend fun getGoodIssues(repoName: String) =
+        try{
+            GitHubServiceSuccess(githubClient.get<List<GithubIssue>> {
+                url {
+                    encodedPath = "/repos/${repoName}/issues"
+                    parameter(
+                        "labels",
+                        "help wanted"
+                    ) // TODO : Multiple issues. Multiple requests? The default aggregator is an AND
+                    parameter("state", "open")
+                    parameter("assignee", "none")
+                    // default result of 100 is enough for now
                 }
-            }
+            })
         }
-    }
-
-    suspend fun getUser() : GithubUser = githubClient.get<GithubUser> {
-        url {
-            encodedPath = "/user"
-        }
-    }
-
-    suspend fun getGoodIssues(repoName: String) : GitHubServiceResult {
-
-        return GitHubServiceSuccess(githubClient.get<List<GithubIssue>> {
-            url {
-                encodedPath = "/repos/${repoName}/issues"
-                parameter(
-                    "labels",
-                    "help wanted"
-                ) // TODO : Multiple issues. Multiple requests? The default aggregator is an AND
-                parameter("state", "open")
-                parameter("assignee", "none")
-                // default result of 100 is enough for now
-            }
-        })
-    }
+        catch (e: Exception) { GitHubServiceFailure(e) }
 }
-
-data class GithubUser(
-    @set:JsonProperty("login")
-    var login: String,
-
-    @set:JsonProperty("id")
-    var id: Int,
-
-    @set:JsonProperty("email")
-    var email: String?,
-)
 
 data class GithubIssue(
     @set:JsonProperty("id")
