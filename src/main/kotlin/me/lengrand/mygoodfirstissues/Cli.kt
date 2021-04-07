@@ -16,24 +16,18 @@ class CliFirstGoodIssues : Callable<Int> {
         val myGoodFirstIssuesService = MyGoodFirstIssuesService()
 
         return runBlocking {
-            val result = myGoodFirstIssuesService.getGithubIssues(pomLocation!!)
-            when(result){
+            when(val result = myGoodFirstIssuesService.getGithubIssues(pomLocation!!)){
                 is GithubIssuesFailure ->
                     println(result.throwable.message)
                 is GithubIssuesSuccess ->
                     result.githubIssues.forEach{ prettyPrintIssue(it) }
             }
-
             return@runBlocking 0
         }
-
     }
 
-    private fun prettyPrintIssue(githubIssue: GithubIssue) {
-        println(
-            CommandLine.Help.Ansi.AUTO.string("@|bold,yellow  ${githubIssue.title}|@")
-        )
-    }
+    private fun prettyPrintIssue(githubIssue: GithubIssue) =
+        println(CommandLine.Help.Ansi.AUTO.string("@|bold,yellow  ${githubIssue.title}|@"))
 
     companion object{
         @JvmStatic
