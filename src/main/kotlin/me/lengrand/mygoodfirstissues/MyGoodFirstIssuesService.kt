@@ -10,21 +10,20 @@ sealed class MyGoodFirstIssuesServiceResult
 data class GithubIssuesFailure(val throwable : Throwable) : MyGoodFirstIssuesServiceResult()
 data class GithubIssuesSuccess(val githubIssues: List<GithubIssue>) : MyGoodFirstIssuesServiceResult()
 
-class MyGoodFirstIssuesService {
-
-    private val mavenClient = MavenClient(MavenClient.getDefaultClient())
-    private val githubUrlExtractor = GithubNameExtractor()
-    private val gitHubService = GitHubService(GitHubService.getDefaultClient(GithubLogin()))
+class MyGoodFirstIssuesService(
+    private val mavenService: MavenService = MavenService(MavenService.getDefaultClient()),
+    private val githubNameExtractor: GithubNameExtractor = GithubNameExtractor(),
+    private val gitHubService: GitHubService = GitHubService(GitHubService.getDefaultClient(GithubLogin()))){
 
     suspend fun getGithubIssues(urlOrPath: String): MyGoodFirstIssuesServiceResult {
-        val pomResult = mavenClient.getPom(urlOrPath)
+        val pomResult = mavenService.getPom(urlOrPath)
 
         if(pomResult is MavenClientFailure) return GithubIssuesFailure(pomResult.throwable)
 
         val githubNames = (pomResult as MavenClientSuccess).pomProject.dependencies
-            .map { mavenClient.getDependencyPom(it) }
+            .map { mavenService.getDependencyPom(it) }
             .filterIsInstance<MavenClientSuccess>()
-            .map { githubUrlExtractor.getGithubNameFromProject(it.pomProject); }
+            .map { githubNameExtractor.getGithubNameFromProject(it.pomProject); }
             .filterIsInstance<GithubNameSuccess>()
             .map { it.name }
 

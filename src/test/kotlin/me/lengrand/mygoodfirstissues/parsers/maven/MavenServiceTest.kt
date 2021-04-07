@@ -5,14 +5,12 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.features.json.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.io.File
 
-internal class MavenClientTest {
+internal class MavenServiceTest {
     private val minimalResourceStreamPom = javaClass.classLoader.getResourceAsStream("poms/minimal-pom.xml")
     private val minimalResourcePom = javaClass.classLoader.getResource("poms/minimal-pom.xml")
 
@@ -43,7 +41,7 @@ internal class MavenClientTest {
     private val Url.hostWithPortIfRequired: String get() = if (port == protocol.defaultPort) host else hostWithPort
     private val Url.fullUrl: String get() = "${protocol.name}://$hostWithPortIfRequired$fullPath"
 
-    private val mavenClient = MavenClient(mockClient)
+    private val mavenClient = MavenService(mockClient)
 
     @Test
     fun shouldSuccessOnValidRemotePom(){

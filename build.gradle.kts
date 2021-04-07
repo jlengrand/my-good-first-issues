@@ -13,6 +13,7 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    maven("https://dl.bintray.com/kotlin/kotlin-eap")
 }
 
 dependencies {
@@ -24,6 +25,10 @@ dependencies {
     implementation("io.ktor:ktor-client-jackson:$ktorVersion")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
 
+    val mockkVersion = "1.10.6"
+    testImplementation("io.mockk:mockk:$mockkVersion")
+//    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$mockkVersion")
+
     implementation("info.picocli:picocli:4.6.1")
 //    kapt("info.picocli:picocli-codegen:4.6.1")
 
@@ -32,6 +37,7 @@ dependencies {
     testImplementation(kotlin("test-junit5"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 //kapt {
@@ -76,4 +82,12 @@ tasks {
         sourcesMain.allSource.forEach { println("add from sources: ${it.name}") }
         from(sourcesMain.output)
     }
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "1.8"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "1.8"
 }

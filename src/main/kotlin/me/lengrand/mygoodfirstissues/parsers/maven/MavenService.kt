@@ -13,12 +13,12 @@ sealed class MavenClientResult
 data class MavenClientFailure(val throwable : Throwable) : MavenClientResult()
 data class MavenClientSuccess(val pomProject: POMProject) : MavenClientResult()
 
-class MavenClient(private val client : HttpClient) {
+class MavenService(private val mavenClient : HttpClient) {
 
     suspend fun getDependencyPom(pomDependency: POMDependency) = getPom(generateUrl(pomDependency))
 
     private suspend fun getRemotePom(url : String) =
-        try{ MavenClientSuccess(client.get<POMProject>(url)) }catch (e: Exception) { MavenClientFailure(e) }
+        try{ MavenClientSuccess(mavenClient.get<POMProject>(url)) }catch (e: Exception) { MavenClientFailure(e) }
 
     private fun getLocalPom(filePath : String) =
         if(File(filePath).exists()) (MavenClientSuccess(PomParser().parseFromFilePath(filePath)))
@@ -33,7 +33,6 @@ class MavenClient(private val client : HttpClient) {
     companion object {
         fun getDefaultClient(): HttpClient {
             return HttpClient(Apache) {
-    //        install(Logging)
                 install(JsonFeature) {
                     serializer = JacksonSerializer(jackson = kotlinXmlMapper)
                     accept(ContentType.Text.Xml)
