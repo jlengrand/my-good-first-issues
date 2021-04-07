@@ -2,10 +2,7 @@ package me.lengrand.mygoodfirstissues
 
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
-import me.lengrand.mygoodfirstissues.github.GitHubService
-import me.lengrand.mygoodfirstissues.github.GitHubServiceFailure
-import me.lengrand.mygoodfirstissues.github.GitHubServiceSuccess
-import me.lengrand.mygoodfirstissues.github.GithubIssue
+import me.lengrand.mygoodfirstissues.github.*
 import me.lengrand.mygoodfirstissues.parsers.maven.*
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -99,10 +96,18 @@ internal class MyGoodFirstIssuesServiceTest {
             body = "body",
             htmlUrl = "https://issue.github",
             id = 554,
+            nodeId = 54567,
             title = "title",
             repository_url = "https://repo.github",
             createdAt = Date(),
-            updatedAt = Date()
+            updatedAt = Date(),
+            repository = GithubRepository(
+                id = 321,
+                nodeId = 245234,
+                name = "randomUser/randomName",
+                fullName = "a random name",
+                repoUrl = "https://repo.github",
+            )
         ))
 
         coEvery { mavenService.getDependencyPom(any()) } returns MavenClientSuccess(mockPomProject)

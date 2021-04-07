@@ -25,10 +25,18 @@ internal class GitHubServiceTest{
             body = "body",
             htmlUrl = "https://issue.github",
             id = 554,
+            nodeId = 54567,
             title = "title",
             repository_url = "https://repo.github",
             createdAt = Date(),
-            updatedAt = Date()
+            updatedAt = Date(),
+            repository = GithubRepository(
+                id = 321,
+                nodeId = 245234,
+                name = "randomUser/randomName",
+                fullName = "a random name",
+                repoUrl = "https://repo.github",
+            )
         ))
 
     private val mapper = ObjectMapper().registerKotlinModule().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)

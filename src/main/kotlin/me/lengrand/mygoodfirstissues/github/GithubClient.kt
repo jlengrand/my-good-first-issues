@@ -59,6 +59,9 @@ data class GithubIssue(
     @set:JsonProperty("id")
     var id: Int,
 
+    @set:JsonProperty("node_id")
+    var nodeId: Int,
+
     @set:JsonProperty("repository_url")
     var repository_url: String,
 
@@ -75,8 +78,27 @@ data class GithubIssue(
     var createdAt: Date,
 
     @set:JsonProperty("updated_at")
-    var updatedAt : Date
+    var updatedAt : Date,
 
+    @set:JsonProperty("repository")
+    var repository : GithubRepository
+)
+
+data class GithubRepository(
+    @set:JsonProperty("id")
+    var id: Int,
+
+    @set:JsonProperty("node_id")
+    var nodeId: Int,
+
+    @set:JsonProperty("name")
+    var name: String,
+
+    @set:JsonProperty("full_name")
+    var fullName: String,
+
+    @set:JsonProperty("repos_url")
+    var repoUrl: String,
 )
 
 data class GithubLogin(val login: String? = null, val oauth: String? = null){
