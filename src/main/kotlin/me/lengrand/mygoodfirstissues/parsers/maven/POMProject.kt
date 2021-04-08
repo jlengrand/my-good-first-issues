@@ -14,7 +14,9 @@ data class POMDependency(
 
     @set:JsonProperty("version")
     var version: String?
-)
+){
+    override fun toString() = "$groupId:$artifactId:$version"
+}
 
 data class POMScm(
     @set:JsonProperty("url")
@@ -46,4 +48,6 @@ data class POMProject(
 
     @set:JsonAlias("issueManagement")
     var issueManagement: POMIssuesManagement?
-)
+){
+    override fun toString() = "$groupId:$artifactId:$version:${scm?.url}:${issueManagement?.url}"
+}
