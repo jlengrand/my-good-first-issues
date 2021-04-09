@@ -17,6 +17,22 @@ repositories {
 }
 
 dependencies {
+    val mavenVersion = "3.8.1"
+    val mavenResolverVersion = "1.6.2"
+    implementation("org.apache.maven:maven-model:$mavenVersion")
+    implementation("org.apache.maven:maven-plugin-api:$mavenVersion")
+    implementation("org.apache.maven:maven-core:$mavenVersion")
+    implementation("org.apache.maven:maven-resolver-provider:$mavenVersion")
+//    implementation("org.apache.maven:maven-resolver-connector-basic:$mavenResolverVersion")
+//    implementation("org.apache.maven:maven-resolver-transport-file:$mavenResolverVersion")
+//    implementation("org.apache.maven:maven-resolver-transport-http:$mavenResolverVersion")
+//    implementation("org.apache.maven:maven-resolver-transport-wagon:$mavenResolverVersion")
+    implementation("org.eclipse.aether:aether-connector-basic:1.1.0")
+    implementation("org.eclipse.aether:aether-transport-file:1.1.0")
+    implementation("org.eclipse.aether:aether-transport-http:1.1.0")
+    implementation("org.eclipse.aether:aether-transport-wagon:1.1.0")
+
+
     val ktorVersion = "1.5.2"
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-java:$ktorVersion")
