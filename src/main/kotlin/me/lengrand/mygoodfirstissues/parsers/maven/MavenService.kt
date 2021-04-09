@@ -3,25 +3,28 @@ package me.lengrand.mygoodfirstissues.parsers.maven
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
 import io.ktor.client.features.json.*
-import io.ktor.client.request.*
 import io.ktor.http.*
 import me.lengrand.mygoodfirstissues.parsers.maven.PomParser.Companion.kotlinXmlMapper
+import org.apache.maven.model.Dependency
+import org.apache.maven.model.Model
 import java.io.File
 import java.io.FileNotFoundException
+import kotlin.io.path.ExperimentalPathApi
 
 sealed class MavenClientResult
 data class MavenClientFailure(val throwable : Throwable) : MavenClientResult()
-data class MavenClientSuccess(val pomProject: POMProject) : MavenClientResult()
+data class MavenClientSuccess(val pomProject: Model) : MavenClientResult()
 
-class MavenService(private val mavenClient : HttpClient) {
+@ExperimentalPathApi
+class MavenService(private val mavenClient : HttpClient, private val pomFetcher : EffectivePomFetcher) {
 
-    suspend fun getDependencyPom(pomDependency: POMDependency) = getPom(generateUrl(pomDependency))
+    suspend fun getDependencyPom(pomDependency: Dependency) = getPom(generateUrl(pomDependency))
 
     private suspend fun getRemotePom(url : String) =
-        try{ MavenClientSuccess(mavenClient.get<POMProject>(url)) }catch (e: Exception) { MavenClientFailure(e) }
+        try{ MavenClientSuccess(pomFetcher.getEffectiveModel(url)) }catch (e: Exception) { MavenClientFailure(e) }
 
     private fun getLocalPom(filePath : String) =
-        if(File(filePath).exists()) (MavenClientSuccess(PomParser().parseFromFilePath(filePath)))
+        if(File(filePath).exists()) (MavenClientSuccess(pomFetcher.getEffectiveModel(File(filePath))))
         else MavenClientFailure(FileNotFoundException("$filePath was not found on your machine"))
 
     suspend fun getPom(urlOrFilePath: String) : MavenClientResult =
@@ -46,7 +49,7 @@ class MavenService(private val mavenClient : HttpClient) {
 
 const val ROOT_MAVEN_URL = "https://repo1.maven.org/maven2/";
 
-fun generateUrl(pomProject: POMDependency) : String {
+fun generateUrl(pomProject: Dependency) : String {
     // TODO Use a URLBuilder
     return ROOT_MAVEN_URL +
             pomProject.groupId.replace(".", "/") + "/" +

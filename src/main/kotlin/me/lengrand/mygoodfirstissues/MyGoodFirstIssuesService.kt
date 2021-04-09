@@ -7,13 +7,15 @@ import me.lengrand.mygoodfirstissues.github.GithubLogin
 import me.lengrand.mygoodfirstissues.logging.AppLogger
 import me.lengrand.mygoodfirstissues.logging.SilentAppLogger
 import me.lengrand.mygoodfirstissues.parsers.maven.*
+import kotlin.io.path.ExperimentalPathApi
 
 sealed class MyGoodFirstIssuesServiceResult
 data class GithubIssuesFailure(val throwable : Throwable) : MyGoodFirstIssuesServiceResult()
 data class GithubIssuesSuccess(val githubIssues: List<GithubIssue>) : MyGoodFirstIssuesServiceResult()
 
+@ExperimentalPathApi
 class MyGoodFirstIssuesService(
-    private val mavenService: MavenService = MavenService(MavenService.getDefaultClient()),
+    private val mavenService: MavenService = MavenService(MavenService.getDefaultClient(), EffectivePomFetcher()),
     private val githubNameExtractor: GithubNameExtractor = GithubNameExtractor(),
     private val gitHubService: GitHubService = GitHubService(GitHubService.getDefaultClient(GithubLogin())),
     private val logger : AppLogger = SilentAppLogger()){

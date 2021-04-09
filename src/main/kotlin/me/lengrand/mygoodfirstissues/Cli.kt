@@ -5,8 +5,10 @@ import me.lengrand.mygoodfirstissues.github.GithubIssue
 import me.lengrand.mygoodfirstissues.logging.DefaultAppLogger
 import picocli.CommandLine
 import java.util.concurrent.Callable
+import kotlin.io.path.ExperimentalPathApi
 import kotlin.system.exitProcess
 
+@ExperimentalPathApi
 class CliFirstGoodIssues : Callable<Int> {
 
     @CommandLine.Parameters(index = "0", description = ["location of the pom scan to scan"], defaultValue = "./pom.xml")

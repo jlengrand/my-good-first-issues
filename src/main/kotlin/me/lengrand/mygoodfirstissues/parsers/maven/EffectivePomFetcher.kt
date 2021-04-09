@@ -3,6 +3,7 @@ package me.lengrand.mygoodfirstissues.parsers.maven
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.maven.model.Model
 import org.apache.maven.model.building.DefaultModelBuilderFactory
 import org.apache.maven.model.building.DefaultModelBuildingRequest
 import org.apache.maven.model.resolution.ModelResolver
@@ -31,17 +32,30 @@ import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createTempDirectory
 
 // Inspired from https://stackoverflow.com/questions/55527844/programatically-getting-an-effective-pom-using-maven-resolver-provider
-object EffectivePomBuilder {
-    @ExperimentalPathApi
-    @JvmStatic
-    fun main(args: Array<String>) {
-        val springBootPOMPath = "https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot/2.1.4.RELEASE/spring-boot-2.1.4.RELEASE.pom"
+@ExperimentalPathApi
+class EffectivePomFetcher {
 
-        val tempPath = createTempDirectory("maven")
+    private val repos = listOf(
+        RemoteRepository.Builder(
+            "central", "default",
+            "https://repo.maven.apache.org/maven2/"
+        ).build()
+    )
+
+    private val tempPath = createTempDirectory("mavenUrl")
+
+    init{
         tempPath.toFile().deleteOnExit() // TODO : Will that ever be run on a website :). Need to build a cache
-        println(tempPath.toString())
+    }
 
-        val springBootPOM = downloadPOM(springBootPOMPath, HttpClientBuilder.create().build(), tempPath.toString())
+    @ExperimentalPathApi
+    fun getEffectiveModel(url : String): Model {
+        val startingPom = downloadPOM(url, HttpClientBuilder.create().build(), tempPath.toString()) // TODO : Do async
+        return getEffectiveModel(startingPom)
+    }
+
+    @ExperimentalPathApi
+    fun getEffectiveModel(startingPom: File): Model {
 
         val locator = serviceLocator()
         val system = locator.getService(RepositorySystem::class.java)
@@ -49,12 +63,6 @@ object EffectivePomBuilder {
         session.localRepositoryManager = system.newLocalRepositoryManager(session, LocalRepository(tempPath.toString()))
         val remoteRepositoryManager = locator.getService(RemoteRepositoryManager::class.java)
 
-        val repos = listOf(
-            RemoteRepository.Builder(
-                "central", "default",
-                "https://repo.maven.apache.org/maven2/"
-            ).build()
-        )
         val repositorySystem = DefaultRepositorySystem()
         repositorySystem.initService(locator)
 
@@ -67,14 +75,12 @@ object EffectivePomBuilder {
             ProjectBuildingRequest.RepositoryMerging.POM_DOMINANT,
             null
         )
-        val modelBuildingRequest = DefaultModelBuildingRequest()
 
-        modelBuildingRequest.pomFile = springBootPOM
+        val modelBuildingRequest = DefaultModelBuildingRequest()
+        modelBuildingRequest.pomFile = startingPom
         modelBuildingRequest.modelResolver = modelResolver
 
-        val modelBuilder = DefaultModelBuilderFactory().newInstance()
-        println(modelBuilder.build(modelBuildingRequest).effectiveModel.dependencies)
-
+        return DefaultModelBuilderFactory().newInstance().build(modelBuildingRequest).effectiveModel
     }
 
     private fun serviceLocator(): DefaultServiceLocator {

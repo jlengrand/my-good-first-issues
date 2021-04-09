@@ -1,12 +1,14 @@
 package me.lengrand.mygoodfirstissues.parsers.maven
 
+import org.apache.maven.model.Model
+
 sealed class GithubNameResult
 data class GithubNameSuccess(val name : String) : GithubNameResult()
-data class GithubNameFailure(val pomProject: POMProject) : GithubNameResult()
+data class GithubNameFailure(val pomProject: Model) : GithubNameResult()
 
 class GithubNameExtractor {
 
-    fun getGithubNameFromProject(pomProject: POMProject) : GithubNameResult {
+    fun getGithubNameFromProject(pomProject: Model) : GithubNameResult {
         if(pomProject.issueManagement?.url == null && pomProject.scm?.url == null)
             return GithubNameFailure(pomProject)
 
@@ -16,7 +18,7 @@ class GithubNameExtractor {
                 convertUrlToGithubName(pomProject, pomProject.scm!!.url!!)
     }
 
-    private fun convertUrlToGithubName(pomProject: POMProject, url: String): GithubNameResult {
+    private fun convertUrlToGithubName(pomProject: Model, url: String): GithubNameResult {
         // TODO : So not proud of this
         return if (url.startsWith("https://github.com"))
             GithubNameSuccess(
