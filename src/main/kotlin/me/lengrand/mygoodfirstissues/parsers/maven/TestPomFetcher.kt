@@ -27,20 +27,26 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.createTempDirectory
 
 // Inspired from https://stackoverflow.com/questions/55527844/programatically-getting-an-effective-pom-using-maven-resolver-provider
 object EffectivePomBuilder {
+    @ExperimentalPathApi
     @JvmStatic
     fun main(args: Array<String>) {
-        val path = Paths.get("./target")
-        Files.createDirectories(path)
+        val springBootPOMPath = "https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot/2.1.4.RELEASE/spring-boot-2.1.4.RELEASE.pom"
 
-        val workingDir = path.toString()
+        val tempPath = createTempDirectory("maven")
+        tempPath.toFile().deleteOnExit() // TODO : Will that ever be run on a website :). Need to build a cache
+        println(tempPath.toString())
+
+        val springBootPOM = downloadPOM(springBootPOMPath, HttpClientBuilder.create().build(), tempPath.toString())
+
         val locator = serviceLocator()
         val system = locator.getService(RepositorySystem::class.java)
         val session = MavenRepositorySystemUtils.newSession()
-        val localRepo = LocalRepository("$workingDir/m2")
-        session.localRepositoryManager = system.newLocalRepositoryManager(session, localRepo)
+        session.localRepositoryManager = system.newLocalRepositoryManager(session, LocalRepository(tempPath.toString()))
         val remoteRepositoryManager = locator.getService(RemoteRepositoryManager::class.java)
 
         val repos = listOf(
@@ -62,14 +68,13 @@ object EffectivePomBuilder {
             null
         )
         val modelBuildingRequest = DefaultModelBuildingRequest()
-        val springBootPOMPath = "https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot/2.1.4.RELEASE/spring-boot-2.1.4.RELEASE.pom"
-        val springBootPOM = downloadPOM(springBootPOMPath, HttpClientBuilder.create().build(), workingDir)
 
         modelBuildingRequest.pomFile = springBootPOM
         modelBuildingRequest.modelResolver = modelResolver
 
         val modelBuilder = DefaultModelBuilderFactory().newInstance()
         println(modelBuilder.build(modelBuildingRequest).effectiveModel.dependencies)
+
     }
 
     private fun serviceLocator(): DefaultServiceLocator {
