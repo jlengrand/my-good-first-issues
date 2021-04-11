@@ -53,8 +53,8 @@ class MyGoodFirstIssuesService(
             .partition { it.second is GitHubServiceSuccess }
 
         // TODO : WTF?
-        println(issueFailures)
-        issueFailures.forEach { logger.logGithubIssueFailure(it.first) }
+//        println(issueFailures)
+//        issueFailures.forEach { logger.logGithubIssueFailure(it.first) }
 
         // TODO : Avoid duplicates
 

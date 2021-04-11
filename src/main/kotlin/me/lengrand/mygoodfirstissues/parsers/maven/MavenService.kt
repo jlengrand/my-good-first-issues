@@ -2,6 +2,7 @@ package me.lengrand.mygoodfirstissues.parsers.maven
 
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
+import io.ktor.client.features.cache.*
 import io.ktor.client.features.json.*
 import io.ktor.http.*
 import me.lengrand.mygoodfirstissues.parsers.maven.PomParser.Companion.kotlinXmlMapper
@@ -36,6 +37,7 @@ class MavenService(private val mavenClient : HttpClient, private val pomFetcher 
     companion object {
         fun getDefaultClient(): HttpClient {
             return HttpClient(Apache) {
+                install(HttpCache)
                 install(JsonFeature) {
                     serializer = JacksonSerializer(jackson = kotlinXmlMapper)
                     accept(ContentType.Text.Xml)

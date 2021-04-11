@@ -7,8 +7,8 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
 import io.ktor.client.features.*
+import io.ktor.client.features.cache.*
 import io.ktor.client.features.json.*
-import io.ktor.client.features.logging.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import java.util.*
@@ -24,7 +24,7 @@ class GitHubService(private val githubClient : HttpClient) {
     companion object{
         // TODO : Look into conditional requests https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api#conditional-requests
         fun getDefaultClient(githubLogin: GithubLogin) = HttpClient(Apache) {
-//            install(Logging)
+            install(HttpCache)
             install(JsonFeature) {
                 serializer = JacksonSerializer(ObjectMapper().registerKotlinModule().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false))
                 accept(ContentType.Application.Json)
@@ -34,7 +34,7 @@ class GitHubService(private val githubClient : HttpClient) {
                 method = HttpMethod.Get
                 host = "api.github.com"
                 header("Accept", "application/vnd.github.v3+json")
-                if (githubLogin.hasToken()) header("Authorization", githubLogin.authToken)
+                if (githubLogin.hasToken()) header("Authorization", "token ${githubLogin.oauth}")
             }
         }
     }
@@ -82,7 +82,15 @@ data class GithubIssue(
     var updatedAt : Date,
 
     @set:JsonProperty("repository")
-    var repository : GithubRepository?
+    var repository : GithubRepository?,
+
+    @set:JsonProperty("labels")
+    var labels : List<GithubLabel> = listOf()
+)
+
+data class GithubLabel(
+    @set:JsonProperty("name")
+    var name: String,
 )
 
 data class GithubRepository(

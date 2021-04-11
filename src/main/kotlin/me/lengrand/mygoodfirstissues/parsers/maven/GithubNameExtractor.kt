@@ -20,7 +20,7 @@ class GithubNameExtractor {
 
     private fun convertUrlToGithubName(pomProject: Model, url: String): GithubNameResult {
         // TODO : So not proud of this
-        return if (url.startsWith("https://github.com"))
+        val result =  if (url.startsWith("https://github.com"))
             GithubNameSuccess(
                 url
                     .replace("https://github.com/", "")
@@ -29,5 +29,6 @@ class GithubNameExtractor {
                     .trimEnd { it == "/".single() }
             )
         else GithubNameFailure(pomProject)
+        return result
     }
 }

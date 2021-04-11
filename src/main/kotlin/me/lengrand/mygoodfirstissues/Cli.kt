@@ -34,12 +34,24 @@ class CliFirstGoodIssues : Callable<Int> {
                 is GithubIssuesFailure ->
                     println(result.throwable.message)
                 is GithubIssuesSuccess -> {
-                    println(CommandLine.Help.Ansi.AUTO.string("@|yellow,bold Found no issues for you to work on! Try again later! |@"))
-                    result.githubIssues.forEach { prettyPrintIssue(it) }
+                    if (result.githubIssues.isEmpty()) println(CommandLine.Help.Ansi.AUTO.string("@|yellow,bold Found no issues for you to work on! Try again later! |@"))
+                    else prettyPrintIssues(result.githubIssues)
                 }
             }
             return@runBlocking 0
         }
+    }
+
+    private fun prettyPrintIssues(githubIssues: List<GithubIssue>) {
+        println(CommandLine.Help.Ansi.AUTO.string("@|bold,green ======= |@"))
+        println(CommandLine.Help.Ansi.AUTO.string("@|bold,green ======= |@"))
+        println(CommandLine.Help.Ansi.AUTO.string("@|bold,green Found ${githubIssues.size} issues for you! |@"))
+
+        githubIssues
+            .distinctBy { it.htmlUrl }
+            .sortedByDescending { it.createdAt }
+            .forEach { prettyPrintIssue(it) }
+
     }
 
     private fun getGithubLogin() : GithubLogin{
@@ -56,8 +68,14 @@ class CliFirstGoodIssues : Callable<Int> {
         return GithubLogin(properties["login"].toString(), properties["oauth"].toString())
     }
 
-    private fun prettyPrintIssue(githubIssue: GithubIssue) =
-        println(CommandLine.Help.Ansi.AUTO.string("@|bold,yellow  ${githubIssue.title}|@"))
+    private fun prettyPrintIssue(githubIssue: GithubIssue) {
+        println(CommandLine.Help.Ansi.AUTO.string(""))
+        println(CommandLine.Help.Ansi.AUTO.string("@|bold,green  ${githubIssue.title}|@"))
+        println(CommandLine.Help.Ansi.AUTO.string("@|blue  ${githubIssue.htmlUrl} - ${githubIssue.createdAt} |@"))
+//        println(CommandLine.Help.Ansi.AUTO.string(""))
+//        println(CommandLine.Help.Ansi.AUTO.string("@|green  x${githubIssue.body}|@"))
+        println(CommandLine.Help.Ansi.AUTO.string("@|yellow  ${githubIssue.labels.joinToString(",") { it.name }}|@"))
+    }
 
     companion object{
         @JvmStatic
@@ -72,23 +90,23 @@ class PicoCliLogger : AppLogger {
     override fun logNewRepoName(repoName: String) = Unit
 
     override fun logNewDependency(pomDependency: Dependency) {
-        println(CommandLine.Help.Ansi.AUTO.string("@|green Found new dependency : $pomDependency! |@"))
+//        println(CommandLine.Help.Ansi.AUTO.string("@|green Found new dependency : $pomDependency! |@"))
     }
 
     override fun logPomFailure(urlOrPath: String, pomResult: MavenClientFailure) {
-        println(CommandLine.Help.Ansi.AUTO.string("@|red Error while fetching and parsing input POM |@"))
+//        println(CommandLine.Help.Ansi.AUTO.string("@|red Error while fetching and parsing input POM |@"))
     }
 
     override fun logPomDependencyFailure(pomDependency: Dependency) {
-        println(CommandLine.Help.Ansi.AUTO.string("@|red Error while fetching : $pomDependency! |@"))
+//        println(CommandLine.Help.Ansi.AUTO.string("@|red Error while fetching : $pomDependency! |@"))
     }
 
     override fun logGithubFailure(pomProject: Model) {
-        println(CommandLine.Help.Ansi.AUTO.string("@|red Wasn't able to find a Github Project name for project $pomProject |@"))
+//        println(CommandLine.Help.Ansi.AUTO.string("@|red Wasn't able to find a Github Project name for project $pomProject |@"))
     }
 
     override fun logGithubIssueFailure(githubName: String) {
-            println(CommandLine.Help.Ansi.AUTO.string("@| Wasn't able to find Github issues for project $githubName |@"))
+//            println(CommandLine.Help.Ansi.AUTO.string("@| Wasn't able to find Github issues for project $githubName |@"))
     }
 
     override fun logDependencies(dependencies: List<Dependency>) {
