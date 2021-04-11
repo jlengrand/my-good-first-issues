@@ -14,8 +14,8 @@ import io.ktor.http.*
 import java.util.*
 
 sealed class GitHubServiceResult
-data class GitHubServiceFailure(val throwable : Throwable) : GitHubServiceResult()
-data class GitHubServiceSuccess(val githubIssues: List<GithubIssue>) : GitHubServiceResult()
+data class GitHubServiceFailure(val repoName: String, val throwable : Throwable) : GitHubServiceResult()
+data class GitHubServiceSuccess(val repoName: String, val githubIssues: List<GithubIssue>) : GitHubServiceResult()
 
 class GitHubService(private val githubClient : HttpClient) {
 
@@ -39,15 +39,19 @@ class GitHubService(private val githubClient : HttpClient) {
         }
     }
 
-    suspend fun getGoodIssues(repoName: String) =
+    // I have to do multiple queries. Multiple requests because the Github aggregator is an AND
+    suspend fun getGoodIssues(repoName: String) : List<GitHubServiceResult> =
+        helpLabels.map { getGoodIssues(repoName, it) }
+
+    private suspend fun getGoodIssues(repoName: String, label : String) =
         try{
-            GitHubServiceSuccess(githubClient.get<List<GithubIssue>> {
+            GitHubServiceSuccess(repoName, githubClient.get<List<GithubIssue>> {
                 url {
                     encodedPath = "/repos/${repoName}/issues"
-//                    parameter(
-//                        "labels",
-//                        "good first issue"
-//                    ) // TODO : Multiple issues. Multiple requests? The default aggregator is an AND
+                    parameter(
+                        "labels",
+                        label
+                    )
                     parameter("state", "open")
                     parameter("assignee", "none")
                     // default result of 100 is enough for now
@@ -55,7 +59,7 @@ class GitHubService(private val githubClient : HttpClient) {
             })
         }
         catch (e: Exception) {
-            GitHubServiceFailure(e)
+            GitHubServiceFailure(repoName, e)
         }
 }
 

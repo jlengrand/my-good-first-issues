@@ -3,7 +3,7 @@ package me.lengrand.mygoodfirstissues.parsers.maven
 import org.apache.maven.model.Model
 
 sealed class GithubNameResult
-data class GithubNameSuccess(val name : String) : GithubNameResult()
+data class GithubNameSuccess(val pomProject: Model, val name : String) : GithubNameResult()
 data class GithubNameFailure(val pomProject: Model) : GithubNameResult()
 
 class GithubNameExtractor {
@@ -20,8 +20,8 @@ class GithubNameExtractor {
 
     private fun convertUrlToGithubName(pomProject: Model, url: String): GithubNameResult {
         // TODO : So not proud of this
-        val result =  if (url.startsWith("https://github.com"))
-            GithubNameSuccess(
+        return if (url.startsWith("https://github.com"))
+            GithubNameSuccess(pomProject,
                 url
                     .replace("https://github.com/", "")
                     .replace(".git", "")
@@ -29,6 +29,5 @@ class GithubNameExtractor {
                     .trimEnd { it == "/".single() }
             )
         else GithubNameFailure(pomProject)
-        return result
     }
 }

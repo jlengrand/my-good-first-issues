@@ -1,6 +1,5 @@
 package me.lengrand.mygoodfirstissues
 
-import io.ktor.utils.io.*
 import me.lengrand.mygoodfirstissues.github.GitHubService
 import me.lengrand.mygoodfirstissues.github.GitHubServiceSuccess
 import me.lengrand.mygoodfirstissues.github.GithubIssue
@@ -14,6 +13,8 @@ sealed class MyGoodFirstIssuesServiceResult
 data class GithubIssuesFailure(val throwable : Throwable) : MyGoodFirstIssuesServiceResult()
 data class GithubIssuesSuccess(val githubIssues: List<GithubIssue>) : MyGoodFirstIssuesServiceResult()
 
+class MyGoodFirstIssuesException(message: String) : Exception(message)
+
 @ExperimentalPathApi
 class MyGoodFirstIssuesService(
     private val mavenService: MavenService = MavenService(MavenService.getDefaultClient(), EffectivePomFetcher()),
@@ -22,6 +23,9 @@ class MyGoodFirstIssuesService(
     private val logger : AppLogger = SilentAppLogger()){
 
     suspend fun getGithubIssues(urlOrPath: String): MyGoodFirstIssuesServiceResult {
+        if(!isSupportedFile(urlOrPath))
+            return GithubIssuesFailure(MyGoodFirstIssuesException("$urlOrPath is not of a supported filetype. Please pick a pom.xml extension"))
+
         val pomResult = mavenService.getPom(urlOrPath)
 
         if(pomResult is MavenClientFailure) {
@@ -42,22 +46,25 @@ class MyGoodFirstIssuesService(
 
         val (githubNames, githubFailures) = dependencyPoms
             .map{(it.second as MavenClientSuccess).pomProject}
-            .map { Pair(it, githubNameExtractor.getGithubNameFromProject(it)) }
-            .partition { it.second is GithubNameSuccess }
+            .map { githubNameExtractor.getGithubNameFromProject(it) }
+            .partition { it is GithubNameSuccess }
 
-        githubFailures.forEach { logger.logGithubFailure(it.first) }
+        githubFailures.forEach { logger.logGithubFailure(it) }
 
         val (goodFirstIssues, issueFailures) = githubNames
-            .map{(it.second as GithubNameSuccess).name}
-            .map { Pair(it, gitHubService.getGoodIssues(it)) }
-            .partition { it.second is GitHubServiceSuccess }
+            .map{(it as GithubNameSuccess).name}
+            .flatMap { gitHubService.getGoodIssues(it) }
+            .partition { it is GitHubServiceSuccess }
+
 
         // TODO : WTF?
 //        println(issueFailures)
-//        issueFailures.forEach { logger.logGithubIssueFailure(it.first) }
+//        issueFailures.forEach { logger.logGithubIssueFailure(it) }
 
         // TODO : Avoid duplicates
 
-        return GithubIssuesSuccess(goodFirstIssues.flatMap { (it.second as GitHubServiceSuccess).githubIssues })
+        return GithubIssuesSuccess(goodFirstIssues.flatMap { (it as GitHubServiceSuccess).githubIssues })
     }
+
+    private fun isSupportedFile(urlOrPath: String) = urlOrPath.endsWith("pom.xml")
 }

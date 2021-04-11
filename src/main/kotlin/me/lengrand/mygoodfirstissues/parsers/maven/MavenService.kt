@@ -13,8 +13,8 @@ import java.io.FileNotFoundException
 import kotlin.io.path.ExperimentalPathApi
 
 sealed class MavenClientResult
-data class MavenClientFailure(val throwable : Throwable) : MavenClientResult()
-data class MavenClientSuccess(val pomProject: Model) : MavenClientResult()
+data class MavenClientFailure(val url : String, val throwable : Throwable) : MavenClientResult()
+data class MavenClientSuccess(val url : String, val pomProject: Model) : MavenClientResult()
 
 @ExperimentalPathApi
 class MavenService(private val mavenClient : HttpClient, private val pomFetcher : EffectivePomFetcher) {
@@ -22,11 +22,12 @@ class MavenService(private val mavenClient : HttpClient, private val pomFetcher 
     suspend fun getDependencyPom(pomDependency: Dependency) = getPom(generateUrl(pomDependency))
 
     private suspend fun getRemotePom(url : String) =
-        try{ MavenClientSuccess(pomFetcher.getEffectiveModel(url)) }catch (e: Exception) { MavenClientFailure(e) }
+        try{ MavenClientSuccess(url, pomFetcher.getEffectiveModel(url)) }
+        catch (e: Exception) { MavenClientFailure(url, e) }
 
     private fun getLocalPom(filePath : String) =
-        if(File(filePath).exists()) (MavenClientSuccess(pomFetcher.getEffectiveModel(File(filePath))))
-        else MavenClientFailure(FileNotFoundException("$filePath was not found on your machine"))
+        if(File(filePath).exists()) (MavenClientSuccess(filePath, pomFetcher.getEffectiveModel(File(filePath))))
+        else MavenClientFailure(filePath, FileNotFoundException("$filePath was not found on your machine"))
 
     suspend fun getPom(urlOrFilePath: String) : MavenClientResult =
         if(isRemotePom(urlOrFilePath)) getRemotePom(urlOrFilePath) else getLocalPom(urlOrFilePath)

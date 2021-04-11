@@ -1,6 +1,7 @@
 package me.lengrand.mygoodfirstissues.logging
 
 import me.lengrand.mygoodfirstissues.github.GitHubServiceResult
+import me.lengrand.mygoodfirstissues.parsers.maven.GithubNameResult
 import me.lengrand.mygoodfirstissues.parsers.maven.MavenClientFailure
 import org.apache.maven.model.Dependency
 import org.apache.maven.model.Model
@@ -10,7 +11,7 @@ interface AppLogger{
     fun logNewDependency(pomDependency: Dependency)
     fun logPomFailure(urlOrPath: String, pomResult: MavenClientFailure)
     fun logPomDependencyFailure(pomDependency: Dependency)
-    fun logGithubFailure(pomProject: Model)
+    fun logGithubFailure(pomProject: GithubNameResult)
     fun logGithubIssueFailure(githubName : String)
     fun logDependencies(dependencies: List<Dependency>)
     fun logIssues(goodFirstIssues: List<Pair<String, GitHubServiceResult>>)
@@ -21,7 +22,7 @@ class SilentAppLogger : AppLogger {
     override fun logNewDependency(pomDependency: Dependency) = Unit
     override fun logPomFailure(urlOrPath: String, pomResult: MavenClientFailure) = Unit
     override fun logPomDependencyFailure(pomDependency: Dependency) = Unit
-    override fun logGithubFailure(pomProject: Model) = Unit
+    override fun logGithubFailure(pomProject: GithubNameResult) = Unit
     override fun logGithubIssueFailure(githubName: String) = Unit
     override fun logDependencies(dependencies: List<Dependency>) {
         TODO("Not yet implemented")
@@ -47,7 +48,7 @@ class DefaultAppLogger : AppLogger {
         println("Error while fetching : $pomDependency!")
     }
 
-    override fun logGithubFailure(pomProject: Model) {
+    override fun logGithubFailure(pomProject: GithubNameResult) {
         println("Wasn't able to find a Github Project name for project $pomProject")
     }
 

@@ -3,10 +3,9 @@ package me.lengrand.mygoodfirstissues
 import kotlinx.coroutines.runBlocking
 import me.lengrand.mygoodfirstissues.github.*
 import me.lengrand.mygoodfirstissues.logging.AppLogger
-import me.lengrand.mygoodfirstissues.logging.DefaultAppLogger
+import me.lengrand.mygoodfirstissues.parsers.maven.GithubNameResult
 import me.lengrand.mygoodfirstissues.parsers.maven.MavenClientFailure
 import org.apache.maven.model.Dependency
-import org.apache.maven.model.Model
 import picocli.CommandLine
 import java.io.File
 import java.io.FileReader
@@ -43,7 +42,6 @@ class CliFirstGoodIssues : Callable<Int> {
     }
 
     private fun prettyPrintIssues(githubIssues: List<GithubIssue>) {
-        println(CommandLine.Help.Ansi.AUTO.string("@|bold,green ======= |@"))
         println(CommandLine.Help.Ansi.AUTO.string("@|bold,green ======= |@"))
         println(CommandLine.Help.Ansi.AUTO.string("@|bold,green Found ${githubIssues.size} issues for you! |@"))
 
@@ -99,7 +97,7 @@ class PicoCliLogger : AppLogger {
 //        println(CommandLine.Help.Ansi.AUTO.string("@|red Error while fetching : $pomDependency! |@"))
     }
 
-    override fun logGithubFailure(pomProject: Model) {
+    override fun logGithubFailure(pomProject: GithubNameResult) {
 //        println(CommandLine.Help.Ansi.AUTO.string("@|red Wasn't able to find a Github Project name for project $pomProject |@"))
     }
 
