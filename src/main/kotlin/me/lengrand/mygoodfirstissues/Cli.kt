@@ -72,8 +72,6 @@ class CliFirstGoodIssues : Callable<Int> {
         println(CommandLine.Help.Ansi.AUTO.string(""))
         println(CommandLine.Help.Ansi.AUTO.string("@|bold,green  ${githubIssue.title}|@"))
         println(CommandLine.Help.Ansi.AUTO.string("@|blue  ${githubIssue.htmlUrl} - ${githubIssue.createdAt} |@"))
-//        println(CommandLine.Help.Ansi.AUTO.string(""))
-//        println(CommandLine.Help.Ansi.AUTO.string("@|green  x${githubIssue.body}|@"))
         println(CommandLine.Help.Ansi.AUTO.string("@|yellow  ${githubIssue.labels.joinToString(",") { it.name }}|@"))
     }
 
@@ -110,7 +108,7 @@ class PicoCliLogger : AppLogger {
     }
 
     override fun logDependencies(dependencies: List<Dependency>) {
-        println(CommandLine.Help.Ansi.AUTO.string("@|green Found ${dependencies.size} dependencies in the project |@"))
+        println(CommandLine.Help.Ansi.AUTO.string("@|green Found ${dependencies.size} dependencies in the project. Investigating... |@"))
     }
 
     override fun logIssues(goodFirstIssues: List<Pair<String, GitHubServiceResult>>) {
