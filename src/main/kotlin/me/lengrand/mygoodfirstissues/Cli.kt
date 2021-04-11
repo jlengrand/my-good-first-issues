@@ -1,9 +1,17 @@
 package me.lengrand.mygoodfirstissues
 
 import kotlinx.coroutines.runBlocking
-import me.lengrand.mygoodfirstissues.github.GithubIssue
+import me.lengrand.mygoodfirstissues.github.*
+import me.lengrand.mygoodfirstissues.logging.AppLogger
 import me.lengrand.mygoodfirstissues.logging.DefaultAppLogger
+import me.lengrand.mygoodfirstissues.parsers.maven.MavenClientFailure
+import org.apache.maven.model.Dependency
+import org.apache.maven.model.Model
 import picocli.CommandLine
+import java.io.File
+import java.io.FileReader
+import java.nio.file.Paths
+import java.util.*
 import java.util.concurrent.Callable
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.system.exitProcess
@@ -16,19 +24,36 @@ class CliFirstGoodIssues : Callable<Int> {
 
     override fun call() : Int {
         println(CommandLine.Help.Ansi.AUTO.string("@|bold Let's find some Open-Source for you to work on|@"))
-        val myGoodFirstIssuesService = MyGoodFirstIssuesService(logger = DefaultAppLogger())
+        val myGoodFirstIssuesService = MyGoodFirstIssuesService(
+            gitHubService = GitHubService(GitHubService.getDefaultClient(getGithubLogin())),
+            logger = PicoCliLogger()
+        )
 
         return runBlocking {
             when(val result = myGoodFirstIssuesService.getGithubIssues(pomLocation!!)){
                 is GithubIssuesFailure ->
                     println(result.throwable.message)
                 is GithubIssuesSuccess -> {
-                    println("Found no issues for you to work on. Everything is clean :)")
+                    println(CommandLine.Help.Ansi.AUTO.string("@|yellow,bold Found no issues for you to work on! Try again later! |@"))
                     result.githubIssues.forEach { prettyPrintIssue(it) }
                 }
             }
             return@runBlocking 0
         }
+    }
+
+    private fun getGithubLogin() : GithubLogin{
+        val githubConfigPath = Paths.get(Paths.get(System.getProperty("user.dir")).toString(), ".githubconfig")
+        if (!File(githubConfigPath.toString()).exists()) {
+            println("No GitHub config file found, using without rate limits.")
+            return GithubLogin()
+        }
+        println("I found a Github Login. Let's go!")
+        val reader = FileReader(githubConfigPath.toFile())
+        val properties = Properties()
+        properties.load(reader)
+
+        return GithubLogin(properties["login"].toString(), properties["oauth"].toString())
     }
 
     private fun prettyPrintIssue(githubIssue: GithubIssue) =
@@ -38,6 +63,43 @@ class CliFirstGoodIssues : Callable<Int> {
         @JvmStatic
         fun main(args : Array<String>){
             exitProcess(CommandLine(CliFirstGoodIssues()).execute(*args))
+        }
+    }
+}
+
+class PicoCliLogger : AppLogger {
+
+    override fun logNewRepoName(repoName: String) = Unit
+
+    override fun logNewDependency(pomDependency: Dependency) {
+        println(CommandLine.Help.Ansi.AUTO.string("@|green Found new dependency : $pomDependency! |@"))
+    }
+
+    override fun logPomFailure(urlOrPath: String, pomResult: MavenClientFailure) {
+        println(CommandLine.Help.Ansi.AUTO.string("@|red Error while fetching and parsing input POM |@"))
+    }
+
+    override fun logPomDependencyFailure(pomDependency: Dependency) {
+        println(CommandLine.Help.Ansi.AUTO.string("@|red Error while fetching : $pomDependency! |@"))
+    }
+
+    override fun logGithubFailure(pomProject: Model) {
+        println(CommandLine.Help.Ansi.AUTO.string("@|red Wasn't able to find a Github Project name for project $pomProject |@"))
+    }
+
+    override fun logGithubIssueFailure(githubName: String) {
+            println(CommandLine.Help.Ansi.AUTO.string("@| Wasn't able to find Github issues for project $githubName |@"))
+    }
+
+    override fun logDependencies(dependencies: List<Dependency>) {
+        println(CommandLine.Help.Ansi.AUTO.string("@|green Found ${dependencies.size} dependencies in the project |@"))
+    }
+
+    override fun logIssues(goodFirstIssues: List<Pair<String, GitHubServiceResult>>) {
+        goodFirstIssues.forEach{
+            println(CommandLine.Help.Ansi.AUTO.string(
+                "@|green Found ${(it.second as GitHubServiceSuccess).githubIssues.size} good first issues in project ${it.first} |@"
+            ))
         }
     }
 }

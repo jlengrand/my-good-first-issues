@@ -60,7 +60,7 @@ class EffectivePomFetcher {
         val locator = serviceLocator()
         val system = locator.getService(RepositorySystem::class.java)
         val session = MavenRepositorySystemUtils.newSession()
-        session.localRepositoryManager = system.newLocalRepositoryManager(session, LocalRepository(tempPath.toString()))
+        session.localRepositoryManager = system.newLocalRepositoryManager(session, LocalRepository("$tempPath/m2"))
         val remoteRepositoryManager = locator.getService(RemoteRepositoryManager::class.java)
 
         val repositorySystem = DefaultRepositorySystem()
@@ -80,7 +80,8 @@ class EffectivePomFetcher {
         modelBuildingRequest.pomFile = startingPom
         modelBuildingRequest.modelResolver = modelResolver
 
-        return DefaultModelBuilderFactory().newInstance().build(modelBuildingRequest).effectiveModel
+        val model =  DefaultModelBuilderFactory().newInstance().build(modelBuildingRequest).effectiveModel
+        return model
     }
 
     private fun serviceLocator(): DefaultServiceLocator {
@@ -93,10 +94,8 @@ class EffectivePomFetcher {
     }
 
     private fun downloadPOM(pomURL: String, client: HttpClient, workingDir: String): File {
-        val request = HttpGet(pomURL)
-        val response = client.execute(request)
+        val response = client.execute(HttpGet(pomURL))
         val outputFile = File("$workingDir/" + Paths.get(URI(pomURL).path).fileName.toString())
-        println("**** " + outputFile.absolutePath)
         response.entity.content.use { contentStream ->
             Files.copy(contentStream, outputFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
         }

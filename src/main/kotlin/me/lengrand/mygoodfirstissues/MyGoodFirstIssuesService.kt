@@ -1,5 +1,6 @@
 package me.lengrand.mygoodfirstissues
 
+import io.ktor.utils.io.*
 import me.lengrand.mygoodfirstissues.github.GitHubService
 import me.lengrand.mygoodfirstissues.github.GitHubServiceSuccess
 import me.lengrand.mygoodfirstissues.github.GithubIssue
@@ -28,7 +29,10 @@ class MyGoodFirstIssuesService(
             return GithubIssuesFailure(pomResult.throwable)
         }
 
-        val dependencies = (pomResult as MavenClientSuccess).pomProject.dependencies
+        val dependencies = (pomResult as MavenClientSuccess).pomProject.dependencies +
+                pomResult.pomProject.dependencyManagement.dependencies
+        logger.logDependencies(dependencies)
+
         dependencies.forEach { logger.logNewDependency(it) }
 
         val (dependencyPoms, dependencyFailures) = dependencies.map { Pair(it, mavenService.getDependencyPom(it)) }
@@ -48,7 +52,11 @@ class MyGoodFirstIssuesService(
             .map { Pair(it, gitHubService.getGoodIssues(it)) }
             .partition { it.second is GitHubServiceSuccess }
 
+        // TODO : WTF?
+        println(issueFailures)
         issueFailures.forEach { logger.logGithubIssueFailure(it.first) }
+
+        // TODO : Avoid duplicates
 
         return GithubIssuesSuccess(goodFirstIssues.flatMap { (it.second as GitHubServiceSuccess).githubIssues })
     }

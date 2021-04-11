@@ -1,5 +1,6 @@
 package me.lengrand.mygoodfirstissues.logging
 
+import me.lengrand.mygoodfirstissues.github.GitHubServiceResult
 import me.lengrand.mygoodfirstissues.parsers.maven.MavenClientFailure
 import org.apache.maven.model.Dependency
 import org.apache.maven.model.Model
@@ -11,6 +12,8 @@ interface AppLogger{
     fun logPomDependencyFailure(pomDependency: Dependency)
     fun logGithubFailure(pomProject: Model)
     fun logGithubIssueFailure(githubName : String)
+    fun logDependencies(dependencies: List<Dependency>)
+    fun logIssues(goodFirstIssues: List<Pair<String, GitHubServiceResult>>)
 }
 
 class SilentAppLogger : AppLogger {
@@ -20,6 +23,13 @@ class SilentAppLogger : AppLogger {
     override fun logPomDependencyFailure(pomDependency: Dependency) = Unit
     override fun logGithubFailure(pomProject: Model) = Unit
     override fun logGithubIssueFailure(githubName: String) = Unit
+    override fun logDependencies(dependencies: List<Dependency>) {
+        TODO("Not yet implemented")
+    }
+
+    override fun logIssues(goodFirstIssues: List<Pair<String, GitHubServiceResult>>) {
+        TODO("Not yet implemented")
+    }
 }
 
 class DefaultAppLogger : AppLogger {
@@ -42,6 +52,15 @@ class DefaultAppLogger : AppLogger {
     }
 
     override fun logGithubIssueFailure(githubName: String) {
-        println("Wasn't able to find Github issues for project $githubName")
+        if(githubName.isBlank())
+            println("Wasn't able to find Github issues for project $githubName")
+    }
+
+    override fun logDependencies(dependencies: List<Dependency>) {
+        TODO("Not yet implemented")
+    }
+
+    override fun logIssues(goodFirstIssues: List<Pair<String, GitHubServiceResult>>) {
+        TODO("Not yet implemented")
     }
 }

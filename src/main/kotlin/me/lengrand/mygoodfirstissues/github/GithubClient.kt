@@ -8,6 +8,7 @@ import io.ktor.client.*
 import io.ktor.client.engine.apache.*
 import io.ktor.client.features.*
 import io.ktor.client.features.json.*
+import io.ktor.client.features.logging.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import java.util.*
@@ -23,6 +24,7 @@ class GitHubService(private val githubClient : HttpClient) {
     companion object{
         // TODO : Look into conditional requests https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api#conditional-requests
         fun getDefaultClient(githubLogin: GithubLogin) = HttpClient(Apache) {
+//            install(Logging)
             install(JsonFeature) {
                 serializer = JacksonSerializer(ObjectMapper().registerKotlinModule().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false))
                 accept(ContentType.Application.Json)
@@ -42,25 +44,24 @@ class GitHubService(private val githubClient : HttpClient) {
             GitHubServiceSuccess(githubClient.get<List<GithubIssue>> {
                 url {
                     encodedPath = "/repos/${repoName}/issues"
-                    parameter(
-                        "labels",
-                        "help wanted"
-                    ) // TODO : Multiple issues. Multiple requests? The default aggregator is an AND
+//                    parameter(
+//                        "labels",
+//                        "good first issue"
+//                    ) // TODO : Multiple issues. Multiple requests? The default aggregator is an AND
                     parameter("state", "open")
                     parameter("assignee", "none")
                     // default result of 100 is enough for now
                 }
             })
         }
-        catch (e: Exception) { GitHubServiceFailure(e) }
+        catch (e: Exception) {
+            GitHubServiceFailure(e)
+        }
 }
 
 data class GithubIssue(
     @set:JsonProperty("id")
-    var id: Int,
-
-    @set:JsonProperty("node_id")
-    var nodeId: Int,
+    var id: String,
 
     @set:JsonProperty("repository_url")
     var repository_url: String,
@@ -72,7 +73,7 @@ data class GithubIssue(
     var title: String,
 
     @set:JsonProperty("body")
-    var body: String,
+    var body: String?,
 
     @set:JsonProperty("created_at")
     var createdAt: Date,
@@ -81,15 +82,12 @@ data class GithubIssue(
     var updatedAt : Date,
 
     @set:JsonProperty("repository")
-    var repository : GithubRepository
+    var repository : GithubRepository?
 )
 
 data class GithubRepository(
     @set:JsonProperty("id")
     var id: Int,
-
-    @set:JsonProperty("node_id")
-    var nodeId: Int,
 
     @set:JsonProperty("name")
     var name: String,
