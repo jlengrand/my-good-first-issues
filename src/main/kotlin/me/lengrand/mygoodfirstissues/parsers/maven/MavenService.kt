@@ -5,6 +5,7 @@ import io.ktor.client.engine.apache.*
 import io.ktor.client.features.cache.*
 import io.ktor.client.features.json.*
 import io.ktor.http.*
+import me.lengrand.mygoodfirstissues.parsers.LibDependency
 import me.lengrand.mygoodfirstissues.parsers.maven.PomParser.Companion.kotlinXmlMapper
 import org.apache.maven.model.Dependency
 import org.apache.maven.model.Model
@@ -19,18 +20,21 @@ data class MavenClientSuccess(val url : String, val pomProject: Model) : MavenCl
 @ExperimentalPathApi
 class MavenService(private val mavenClient : HttpClient, private val pomFetcher : EffectivePomFetcher) {
 
-    suspend fun getDependencyPom(pomDependency: Dependency) = getPom(generateUrl(pomDependency))
+    fun getDependencyPom(pomDependency: Dependency) = getPom(generateUrl(pomDependency))
 
-    private suspend fun getRemotePom(url : String) =
-        try{ MavenClientSuccess(url, pomFetcher.getEffectiveModel(url)) }
-        catch (e: Exception) { MavenClientFailure(url, e) }
+    private fun getRemotePom(url : String) = pomFetcher.getEffectiveModel(url)
 
     private fun getLocalPom(filePath : String) =
-        if(File(filePath).exists()) (MavenClientSuccess(filePath, pomFetcher.getEffectiveModel(File(filePath))))
-        else MavenClientFailure(filePath, FileNotFoundException("$filePath was not found on your machine"))
+        if (!File(filePath).exists()) throw FileNotFoundException("$filePath was not found on your machine")
+        else
+            pomFetcher.getEffectiveModel(File(filePath))
 
-    suspend fun getPom(urlOrFilePath: String) : MavenClientResult =
-        if(isRemotePom(urlOrFilePath)) getRemotePom(urlOrFilePath) else getLocalPom(urlOrFilePath)
+    fun getPom(urlOrFilePath: String): Model {
+        return if (isRemotePom(urlOrFilePath)) getRemotePom(urlOrFilePath) else getLocalPom(urlOrFilePath)
+//        val deps1 = if(project.dependencies != null) project.dependencies else listOf()
+//        val deps2 = if(project.dependencyManagement.dependencies != null) project.dependencyManagement.dependencies else listOf()
+//        return NameAndDependencies(project.name, deps1 + deps2, project.scm?.url, project.issueManagement?.url)
+    }
 
     private fun isRemotePom(urlOrFilePath : String) =
         urlOrFilePath.startsWith("http://") || urlOrFilePath.startsWith("https://")
@@ -52,11 +56,17 @@ class MavenService(private val mavenClient : HttpClient, private val pomFetcher 
 
 const val ROOT_MAVEN_URL = "https://repo1.maven.org/maven2/";
 
-fun generateUrl(pomProject: Dependency) : String {
+fun generateUrl(pomProject: Dependency) = generateUrl(me.lengrand.mygoodfirstissues.parsers.LibDependency(
+    group = pomProject.groupId,
+    name = pomProject.artifactId,
+    version = pomProject.version
+))
+
+fun generateUrl(libDependency: LibDependency) : String {
     // TODO Use a URLBuilder
     return ROOT_MAVEN_URL +
-            pomProject.groupId.replace(".", "/") + "/" +
-            pomProject.artifactId + "/" +
-            pomProject.version + "/" +
-            pomProject.artifactId + "-" + pomProject.version + ".pom";
+            libDependency.group.replace(".", "/") + "/" +
+            libDependency.name + "/" +
+            libDependency.version + "/" +
+            libDependency.name + "-" + libDependency.version + ".pom";
 }

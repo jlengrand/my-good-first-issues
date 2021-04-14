@@ -1,29 +1,29 @@
 package me.lengrand.mygoodfirstissues.logging
 
 import me.lengrand.mygoodfirstissues.github.GitHubServiceResult
+import me.lengrand.mygoodfirstissues.parsers.LibDependency
+import me.lengrand.mygoodfirstissues.parsers.ParsingResult
 import me.lengrand.mygoodfirstissues.parsers.maven.GithubNameResult
-import me.lengrand.mygoodfirstissues.parsers.maven.MavenClientFailure
-import org.apache.maven.model.Dependency
 
 interface AppLogger{
     fun logNewRepoName(repoName : String)
-    fun logNewDependency(pomDependency: Dependency)
-    fun logPomFailure(urlOrPath: String, pomResult: MavenClientFailure)
+    fun logNewDependency(pomDependency: LibDependency)
+    fun logParsingFailure(urlOrPath: String, pomResult: ParsingResult)
     fun logPomDependencyFailure(url: String)
     fun logGithubFailure(pomProject: GithubNameResult)
     fun logGithubIssueFailure(githubName : String)
-    fun logDependencies(dependencies: List<Dependency>)
+    fun logDependencies(dependencies: List<LibDependency>)
     fun logIssues(goodFirstIssues: List<Pair<String, GitHubServiceResult>>)
 }
 
 class SilentAppLogger : AppLogger {
     override fun logNewRepoName(repoName: String) = Unit
-    override fun logNewDependency(pomDependency: Dependency) = Unit
-    override fun logPomFailure(urlOrPath: String, pomResult: MavenClientFailure) = Unit
+    override fun logNewDependency(pomDependency: LibDependency) = Unit
+    override fun logParsingFailure(urlOrPath: String, pomResult: ParsingResult) = Unit
     override fun logPomDependencyFailure(pomDependency: String) = Unit
     override fun logGithubFailure(pomProject: GithubNameResult) = Unit
     override fun logGithubIssueFailure(githubName: String) = Unit
-    override fun logDependencies(dependencies: List<Dependency>) {
+    override fun logDependencies(dependencies: List<LibDependency>) {
         TODO("Not yet implemented")
     }
 
@@ -35,11 +35,11 @@ class SilentAppLogger : AppLogger {
 class DefaultAppLogger : AppLogger {
     override fun logNewRepoName(repoName: String) = Unit
 
-    override fun logNewDependency(pomDependency: Dependency) {
+    override fun logNewDependency(pomDependency: LibDependency) {
         println("Found new dependency : $pomDependency!")
     }
 
-    override fun logPomFailure(urlOrPath: String, pomResult: MavenClientFailure) {
+    override fun logParsingFailure(urlOrPath: String, pomResult: ParsingResult) {
         println("Error while fetching and parsing input POM")
     }
 
@@ -56,7 +56,7 @@ class DefaultAppLogger : AppLogger {
             println("Wasn't able to find Github issues for project $githubName")
     }
 
-    override fun logDependencies(dependencies: List<Dependency>) {
+    override fun logDependencies(dependencies: List<LibDependency>) {
         TODO("Not yet implemented")
     }
 

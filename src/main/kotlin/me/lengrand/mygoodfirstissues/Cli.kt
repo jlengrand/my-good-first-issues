@@ -3,9 +3,9 @@ package me.lengrand.mygoodfirstissues
 import kotlinx.coroutines.runBlocking
 import me.lengrand.mygoodfirstissues.github.*
 import me.lengrand.mygoodfirstissues.logging.AppLogger
+import me.lengrand.mygoodfirstissues.parsers.LibDependency
+import me.lengrand.mygoodfirstissues.parsers.ParsingResult
 import me.lengrand.mygoodfirstissues.parsers.maven.GithubNameResult
-import me.lengrand.mygoodfirstissues.parsers.maven.MavenClientFailure
-import org.apache.maven.model.Dependency
 import picocli.CommandLine
 import java.io.File
 import java.io.FileReader
@@ -87,11 +87,11 @@ class PicoCliLogger : AppLogger {
 
     override fun logNewRepoName(repoName: String) = Unit
 
-    override fun logNewDependency(pomDependency: Dependency) {
+    override fun logNewDependency(pomDependency: LibDependency) {
 //        println(CommandLine.Help.Ansi.AUTO.string("@|green Found new dependency : $pomDependency! |@"))
     }
 
-    override fun logPomFailure(urlOrPath: String, pomResult: MavenClientFailure) {
+    override fun logParsingFailure(urlOrPath: String, pomResult: ParsingResult) {
 //        println(CommandLine.Help.Ansi.AUTO.string("@|red Error while fetching and parsing input POM |@"))
     }
 
@@ -107,7 +107,7 @@ class PicoCliLogger : AppLogger {
 //            println(CommandLine.Help.Ansi.AUTO.string("@| Wasn't able to find Github issues for project $githubName |@"))
     }
 
-    override fun logDependencies(dependencies: List<Dependency>) {
+    override fun logDependencies(dependencies: List<LibDependency>) {
         println(CommandLine.Help.Ansi.AUTO.string("@|green Found ${dependencies.size} dependencies in the project. Investigating... |@"))
     }
 

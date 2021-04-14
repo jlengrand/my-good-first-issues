@@ -6,6 +6,9 @@ import me.lengrand.mygoodfirstissues.github.GithubIssue
 import me.lengrand.mygoodfirstissues.github.GithubLogin
 import me.lengrand.mygoodfirstissues.logging.AppLogger
 import me.lengrand.mygoodfirstissues.logging.SilentAppLogger
+import me.lengrand.mygoodfirstissues.parsers.ParserService
+import me.lengrand.mygoodfirstissues.parsers.ParsingFailure
+import me.lengrand.mygoodfirstissues.parsers.ParsingSuccess
 import me.lengrand.mygoodfirstissues.parsers.maven.*
 import kotlin.io.path.ExperimentalPathApi
 
@@ -17,36 +20,33 @@ class MyGoodFirstIssuesException(message: String) : Exception(message)
 
 @ExperimentalPathApi
 class MyGoodFirstIssuesService(
+    private val parserService : ParserService = ParserService(),
     private val mavenService: MavenService = MavenService(MavenService.getDefaultClient(), EffectivePomFetcher()),
     private val githubNameExtractor: GithubNameExtractor = GithubNameExtractor(),
     private val gitHubService: GitHubService = GitHubService(GitHubService.getDefaultClient(GithubLogin())),
     private val logger : AppLogger = SilentAppLogger()){
 
     suspend fun getGithubIssues(urlOrPath: String): MyGoodFirstIssuesServiceResult {
-        if(!isSupportedFile(urlOrPath))
-            return GithubIssuesFailure(MyGoodFirstIssuesException("$urlOrPath is not of a supported filetype. Please pick a pom.xml extension"))
 
-        val pomResult = mavenService.getPom(urlOrPath)
-
-        if(pomResult is MavenClientFailure) {
-            logger.logPomFailure(urlOrPath, pomResult)
-            return GithubIssuesFailure(pomResult.throwable)
+        val parsingResult = parserService.get(urlOrPath)
+        if(parsingResult is ParsingFailure) {
+            logger.logParsingFailure(urlOrPath, parsingResult)
+            return GithubIssuesFailure(parsingResult.throwable)
         }
 
-        val dependencies = (pomResult as MavenClientSuccess).pomProject.dependencies +
-                pomResult.pomProject.dependencyManagement.dependencies
+        val dependencies = (parsingResult as ParsingSuccess).dependencies
         logger.logDependencies(dependencies)
 
         dependencies.forEach { logger.logNewDependency(it) }
 
-        val (dependencyPoms, dependencyFailures) = dependencies.map { mavenService.getDependencyPom(it) }
-            .partition { it is MavenClientSuccess }
+        val (parsedDependencies, parsedFailures) = dependencies
+            .map { parserService.get(generateUrl(it)) }
+            .partition{ it is ParsingSuccess}
 
-        dependencyFailures.forEach { logger.logPomDependencyFailure((it as MavenClientFailure).url) }
+        parsedFailures.forEach { logger.logPomDependencyFailure((it as ParsingFailure).url) }
 
-        val (githubNames, githubFailures) = dependencyPoms
-            .map{(it as MavenClientSuccess).pomProject}
-            .map { githubNameExtractor.getGithubNameFromProject(it) }
+        val (githubNames, githubFailures) = parsedDependencies
+            .map{(it as ParsingSuccess).githubName}
             .partition { it is GithubNameSuccess }
 
         githubFailures.forEach { logger.logGithubFailure(it) }
@@ -56,15 +56,10 @@ class MyGoodFirstIssuesService(
             .flatMap { gitHubService.getGoodIssues(it) }
             .partition { it is GitHubServiceSuccess }
 
-
         // TODO : WTF?
 //        println(issueFailures)
 //        issueFailures.forEach { logger.logGithubIssueFailure(it) }
 
-        // TODO : Avoid duplicates
-
         return GithubIssuesSuccess(goodFirstIssues.flatMap { (it as GitHubServiceSuccess).githubIssues })
     }
-
-    private fun isSupportedFile(urlOrPath: String) = urlOrPath.endsWith("pom.xml")
 }
