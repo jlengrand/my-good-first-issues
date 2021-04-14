@@ -33,8 +33,10 @@ class CliFirstGoodIssues : Callable<Int> {
                 is GithubIssuesFailure ->
                     println(result.throwable.message)
                 is GithubIssuesSuccess -> {
-                    if (result.githubIssues.isEmpty()) println(CommandLine.Help.Ansi.AUTO.string("@|yellow,bold Found no issues for you to work on! Try again later! |@"))
-                    else prettyPrintIssues(result.githubIssues)
+                    if (result.githubIssues.isEmpty())
+                        println(CommandLine.Help.Ansi.AUTO.string("@|yellow,bold Found no issues for you to work on! Try again later! |@"))
+                    else
+                        prettyPrintIssues(result.githubIssues)
                 }
             }
             return@runBlocking 0
@@ -93,7 +95,7 @@ class PicoCliLogger : AppLogger {
 //        println(CommandLine.Help.Ansi.AUTO.string("@|red Error while fetching and parsing input POM |@"))
     }
 
-    override fun logPomDependencyFailure(pomDependency: Dependency) {
+    override fun logPomDependencyFailure(url: String) {
 //        println(CommandLine.Help.Ansi.AUTO.string("@|red Error while fetching : $pomDependency! |@"))
     }
 

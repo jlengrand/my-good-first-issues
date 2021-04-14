@@ -14,6 +14,7 @@ version = "1.0-SNAPSHOT"
 repositories {
     mavenCentral()
     maven("https://dl.bintray.com/kotlin/kotlin-eap")
+//    maven { url = uri("https://repo.gradle.org/gradle/libs-releases") }
 }
 
 dependencies {
@@ -27,6 +28,10 @@ dependencies {
     implementation("org.eclipse.aether:aether-transport-file:1.1.0")
     implementation("org.eclipse.aether:aether-transport-http:1.1.0")
     implementation("org.eclipse.aether:aether-transport-wagon:1.1.0")
+
+//    val toolingApiVersion = "5.2.1"
+//    implementation("org.gradle:gradle-tooling-api:$toolingApiVersion")
+    implementation("org.codehaus.groovy:groovy-astbuilder:3.0.4")
 
     implementation("org.slf4j:slf4j-simple:2.0.0-alpha1")
 

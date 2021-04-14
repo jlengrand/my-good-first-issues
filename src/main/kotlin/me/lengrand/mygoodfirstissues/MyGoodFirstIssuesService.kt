@@ -39,13 +39,13 @@ class MyGoodFirstIssuesService(
 
         dependencies.forEach { logger.logNewDependency(it) }
 
-        val (dependencyPoms, dependencyFailures) = dependencies.map { Pair(it, mavenService.getDependencyPom(it)) }
-            .partition { it.second is MavenClientSuccess }
+        val (dependencyPoms, dependencyFailures) = dependencies.map { mavenService.getDependencyPom(it) }
+            .partition { it is MavenClientSuccess }
 
-        dependencyFailures.forEach { logger.logPomDependencyFailure(it.first) }
+        dependencyFailures.forEach { logger.logPomDependencyFailure((it as MavenClientFailure).url) }
 
         val (githubNames, githubFailures) = dependencyPoms
-            .map{(it.second as MavenClientSuccess).pomProject}
+            .map{(it as MavenClientSuccess).pomProject}
             .map { githubNameExtractor.getGithubNameFromProject(it) }
             .partition { it is GithubNameSuccess }
 
