@@ -28,7 +28,7 @@ class GradleFetcher() {
             val file = File(buildLocation)
             val gradleDependencyUpdater =
                 GradleDependencyUpdater(file)
-            println(gradleDependencyUpdater.allDependencies)
+            println(gradleDependencyUpdater.dependencies)
             println("done")
         }
     }
@@ -37,8 +37,8 @@ class GradleFetcher() {
 
 class FindDependenciesVisitor : CodeVisitorSupport() {
     private var dependenceLineNum = -1
-
     val dependencies: MutableList<GradleDependency> = ArrayList()
+
     override fun visitMethodCallExpression(call: MethodCallExpression) {
         if (call.methodAsString != "buildscript") {
             if (call.methodAsString == "dependencies") {
@@ -56,20 +56,10 @@ class FindDependenciesVisitor : CodeVisitorSupport() {
             val depStr = expressions[0].text
             val deps = depStr.split(":").toTypedArray()
             if (deps.size == 3) {
-                dependencies.add(
-                    GradleDependency(
-                        deps[0],
-                        deps[1],
-                        deps[2]
-                    )
-                )
+                dependencies.add(GradleDependency(deps[0], deps[1], deps[2]))
             }
         }
         super.visitArgumentlistExpression(ale)
-    }
-
-    override fun visitClosureExpression(expression: ClosureExpression) {
-        super.visitClosureExpression(expression)
     }
 
     override fun visitMapExpression(expression: MapExpression) {
@@ -85,44 +75,30 @@ class FindDependenciesVisitor : CodeVisitorSupport() {
     }
 }
 
-class GradleDependencyUpdater(scriptContents: String?) {
-    private val nodes: List<ASTNode>
+class GradleDependencyUpdater(scriptContents: String) {
+    val dependencies: List<GradleDependency>
 
-    constructor(inputFile: File) : this(IOUtils.toString(FileInputStream(inputFile), StandardCharsets.UTF_8)) {}
-
-    val allDependencies: List<GradleDependency>
-        get() {
-            val visitor = FindDependenciesVisitor()
-            for (node in nodes) {
-                node.visit(visitor)
-            }
-            return visitor.dependencies
-        }
+    constructor(inputFile: File) : this(IOUtils.toString(FileInputStream(inputFile), StandardCharsets.UTF_8))
 
     init {
         val builder = AstBuilder()
-        nodes = builder.buildFromString(scriptContents)
+        val nodes = builder.buildFromString(scriptContents)
+
+        val visitor = FindDependenciesVisitor()
+        for (node in nodes) {
+            node.visit(visitor)
+        }
+
+        dependencies = visitor.dependencies.filter { it.isValid() }
     }
 }
 
-class GradleDependency {
-    private val group: String
-    private val name: String
-    private val version: String
+data class GradleDependency(val group: String, val name: String, val version: String){
+    constructor(dep: Map<String, String>) : this(
+        if(dep["group"] != null)  dep["group"]!! else "",
+        if(dep["name"] != null)  dep["name"]!! else "",
+        if(dep["version"] != null)  dep["version"]!! else ""
+    )
 
-    constructor(dep: Map<String, String>) {
-        group = if(dep["group"] != null)  dep["group"]!! else ""
-        name = if(dep["name"] != null)  dep["name"]!! else ""
-        version = if(dep["version"] != null)  dep["version"]!! else ""
-    }
-
-    constructor(group: String, name: String, version: String) {
-        this.group = group
-        this.name = name
-        this.version = version
-    }
-
-    override fun toString(): String {
-        return "$group:$name:$version"
-    }
+    fun isValid() = group.isNotBlank() && name.isNotBlank() && version.isNotBlank()
 }
