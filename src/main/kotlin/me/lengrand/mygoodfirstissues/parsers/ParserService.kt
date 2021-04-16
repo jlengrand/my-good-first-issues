@@ -1,11 +1,15 @@
 package me.lengrand.mygoodfirstissues.parsers
 
+import me.lengrand.mygoodfirstissues.parsers.gradle.GradleDependency
+import me.lengrand.mygoodfirstissues.parsers.gradle.GradleService
 import me.lengrand.mygoodfirstissues.parsers.maven.*
 import org.apache.maven.model.Dependency
+import org.apache.maven.model.Model
 import kotlin.io.path.ExperimentalPathApi
 
 data class LibDependency(val group: String, val name: String, val version: String){
     constructor(dependency: Dependency) : this(dependency.groupId, dependency.artifactId, dependency.version)
+    constructor(dependency: GradleDependency) : this(dependency.group, dependency.name, dependency.version)
 }
 
 class ParserServiceException(message: String) : Exception(message)
@@ -19,12 +23,13 @@ data class ParsingSuccess(
 ) : ParsingResult()
 
 class ParserService @ExperimentalPathApi constructor(
+    private val gradleService : GradleService = GradleService(),
     private val mavenService: MavenService = MavenService(MavenService.getDefaultClient(), EffectivePomFetcher()),
     private val githubNameExtractor: GithubNameExtractor = GithubNameExtractor()
 ) {
 
     @ExperimentalPathApi
-    fun get(urlOrPath: String) : ParsingResult {
+    suspend fun get(urlOrPath: String) : ParsingResult {
         return when{
             urlOrPath.endsWith("pom.xml") || urlOrPath.endsWith(".pom") -> {
                 return try{
@@ -39,6 +44,16 @@ class ParserService @ExperimentalPathApi constructor(
                     return ParsingSuccess(urlOrPath, dependencies, githubName)
                 }
                 catch (e : Exception) { ParsingFailure(urlOrPath, e) }
+            }
+            urlOrPath.endsWith("build.gradle") -> {
+
+                return try{
+                    val dependencies = gradleService.getBuild(urlOrPath)
+                    val libDependencies = dependencies.map { LibDependency(it) }
+
+                    return ParsingSuccess(urlOrPath, libDependencies, GithubNameFailure(Model()))
+                }
+                catch(e: Exception) { ParsingFailure(urlOrPath, e)}
 
             }
             else -> ParsingFailure(
@@ -46,8 +61,4 @@ class ParserService @ExperimentalPathApi constructor(
                 ParserServiceException("$urlOrPath is not of a supported filetype. Please pick a pom.xml extension"))
         }
     }
-
-
-    fun isSupportedInput(urlOrPath : String) =
-        urlOrPath.endsWith("pom.xml") || urlOrPath.endsWith(".gradle")
 }

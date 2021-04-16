@@ -16,13 +16,9 @@ sealed class MyGoodFirstIssuesServiceResult
 data class GithubIssuesFailure(val throwable : Throwable) : MyGoodFirstIssuesServiceResult()
 data class GithubIssuesSuccess(val githubIssues: List<GithubIssue>) : MyGoodFirstIssuesServiceResult()
 
-class MyGoodFirstIssuesException(message: String) : Exception(message)
-
 @ExperimentalPathApi
 class MyGoodFirstIssuesService(
     private val parserService : ParserService = ParserService(),
-    private val mavenService: MavenService = MavenService(MavenService.getDefaultClient(), EffectivePomFetcher()),
-    private val githubNameExtractor: GithubNameExtractor = GithubNameExtractor(),
     private val gitHubService: GitHubService = GitHubService(GitHubService.getDefaultClient(GithubLogin())),
     private val logger : AppLogger = SilentAppLogger()){
 
